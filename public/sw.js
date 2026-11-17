@@ -1,6 +1,6 @@
 // Jalan service worker: app shell cached on install, assets cached on first use.
 // Bump VERSION to force clients onto a new build.
-const VERSION = 'jalan-v2';
+const VERSION = 'jalan-v3';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './apple-touch-icon.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {

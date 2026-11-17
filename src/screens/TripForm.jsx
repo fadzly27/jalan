@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ImagePlus, MinusCircle, Plus, Trash2, Unlink } from 'lucide-react';
-import { Field, Group, PrimaryButton, Sheet, SW, TextButton, inputCls, toast } from '../ui.jsx';
+import { Field, Group, PrimaryButton, Sheet, SW, TextButton, cx, inputCls, toast } from '../ui.jsx';
 import { CountryPicker } from '../pickers.jsx';
 import { useStore } from '../store.jsx';
 import { uid } from '../lib/db.js';
@@ -17,10 +17,12 @@ export default function TripForm({ open, onClose, trip, onSaved, onDeleted }) {
   const { settings, addTrip, updateTrip, deleteTrip } = useStore();
   const [f, setF] = useState(blank);
   const [pickFor, setPickFor] = useState(null);
+  const [tried, setTried] = useState(false);
   const fileRef = useRef(null);
   const home = settings.homeCurrency;
 
   useEffect(() => {
+    if (open) setTried(false);
     if (open) setF(trip ? { name: trip.name, destinations: trip.destinations.length ? trip.destinations : [{ country: '', city: '' }], start: trip.start, end: trip.end, cover: trip.cover, budget: String(trip.budget || '') } : blank());
   }, [open, trip]);
 
@@ -36,10 +38,16 @@ export default function TripForm({ open, onClose, trip, onSaved, onDeleted }) {
   };
 
   const dests = f.destinations.filter((d) => d.country || d.city.trim());
-  const valid = dests.length > 0 && dests.every((d) => d.country) && f.start && f.end && f.end >= f.start;
+  const problem = !dests.length
+    ? 'Add a destination: tap Choose country'
+    : dests.some((d) => !d.country)
+      ? 'Choose a country for each destination'
+      : !f.start || !f.end || f.end < f.start
+        ? 'The end date must be on or after the start date'
+        : null;
 
   const save = async () => {
-    if (!valid) return;
+    if (problem) { setTried(true); toast(problem); return; }
     const name = f.name.trim() || dests.map((d) => d.city.trim() || countryName(d.country)).join(' – ');
     const budget = Number(String(f.budget).replace(/,/g, '')) || 0;
     const destinations = dests.map((d) => ({ country: d.country, city: d.city.trim() }));
@@ -82,12 +90,12 @@ export default function TripForm({ open, onClose, trip, onSaved, onDeleted }) {
   const n = f.start && f.end && f.end >= f.start ? diffDays(f.end, f.start) : null;
 
   return (
-    <Sheet open={open} onClose={onClose} title={trip ? 'Edit Trip' : 'New Trip'} right={<TextButton bold onClick={save} disabled={!valid}>{trip ? 'Save' : 'Add'}</TextButton>}>
+    <Sheet open={open} onClose={onClose} title={trip ? 'Edit Trip' : 'New Trip'} right={<TextButton bold onClick={save}>{trip ? 'Save' : 'Add'}</TextButton>}>
       <Group className="mt-3">
         <Field label="Name" last><input className={inputCls} value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="e.g. Seoul – Busan" /></Field>
       </Group>
 
-      <Group title="Destinations" footer="The local currency is set from each country. You can change it later in Budget.">
+      <Group title="Destinations" footer="Tap Choose country for each stop. The local currency is set from the country, and you can change it later in Budget.">
         {f.destinations.map((d, i) => (
           <div key={i} className="flex items-center pl-2 min-h-[52px] border-b hairline last:border-b-0">
             {f.destinations.length > 1 ? (
@@ -98,7 +106,7 @@ export default function TripForm({ open, onClose, trip, onSaved, onDeleted }) {
             <button onClick={() => setPickFor(i)} className="press min-h-[44px] text-left w-[44%] shrink-0 pr-2">
               {d.country ? (
                 <span className="text-[17px]">{countryName(d.country)} <span className="text-tertiary text-[13px]">{symbol(countryCurrency[d.country])}</span></span>
-              ) : <span className="text-[17px] text-accent">Choose country</span>}
+              ) : <span className={cx('text-[17px]', tried ? 'text-warn font-semibold' : 'text-accent')}>Choose country</span>}
             </button>
             <input className={inputCls + ' pr-4'} value={d.city} onChange={(e) => setDest(i, { city: e.target.value })} placeholder="City" />
           </div>
