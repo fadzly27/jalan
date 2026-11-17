@@ -1,8 +1,28 @@
 # Jalan
 
-A personal travel planner that runs as an installable, offline-first web app. Countdown, overview, itinerary, packing list, documents and a multi-currency budget for every trip. Everything stays on your device (IndexedDB). There is no login and no server.
+<p align="center">
+  <a href="https://fadzly27.github.io/jalan/"><img src="public/icon-192.png" width="96" alt="Jalan app icon"></a>
+</p>
 
-## Run locally
+<p align="center">
+  <b><a href="https://fadzly27.github.io/jalan/">▶ Open Jalan</a></b> &nbsp;·&nbsp; <b><a href="GUIDE.md">User guide</a></b>
+</p>
+
+Jalan is a travel planner for your iPhone: countdown, itinerary, packing list, documents and a multi-currency budget for every trip, in one place. It works offline, needs no account, and keeps everything on your phone.
+
+## Get started in 1 minute
+
+1. Open **[fadzly27.github.io/jalan](https://fadzly27.github.io/jalan/)** in **Safari** on your iPhone.
+2. Tap **Share → Add to Home Screen → Add**.
+3. Open Jalan from your Home Screen and tap **+** to add your first trip.
+
+New to Jalan? Read the step-by-step **[User guide](GUIDE.md)**.
+
+---
+
+## For developers
+
+### Run locally
 
 ```bash
 npm install
@@ -16,7 +36,7 @@ npm run build
 npm run preview
 ```
 
-## Deploy to GitHub Pages
+### Deploy to GitHub Pages
 
 Live at https://fadzly27.github.io/jalan/
 
@@ -32,13 +52,13 @@ Optional automatic deploys: `.github/workflows/deploy.yml` (kept locally, not pu
 
 The build uses relative paths (`base: './'`), so it works at `https://<user>.github.io/<repo>/` with no changes.
 
-## Install on iPhone
+### Install on iPhone
 
 Open the published URL in Safari, tap **Share → Add to Home Screen**. Jalan opens full screen, works offline after the first visit, and keeps its data in the phone's storage.
 
 Tip: back up from **Settings → Export all data** once a month. iOS can clear website data for apps that have not been opened for a long time, and the backup file restores everything (trips, plans, packing, expenses and document files).
 
-## Notes
+### Notes
 
 - Live exchange rates come from open.er-api.com (free, no key), with a fallback to the fawazahmed0 currency API. The last downloaded rates are saved and used offline.
 - Every expense stores its original amount, currency and the rate used, so changing a rate never alters past expenses.
