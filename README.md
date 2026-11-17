@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <b><a href="https://fadzly27.github.io/jalan/">▶ Open Jalan</a></b> &nbsp;·&nbsp; <b><a href="GUIDE.md">User guide</a></b>
+  <b><a href="https://fadzly27.github.io/jalan/">▶ Open Jalan</a></b> &nbsp;·&nbsp; <b><a href="https://fadzly27.github.io/jalan/guide.html">How to use Jalan</a></b>
 </p>
 
 Jalan is a travel planner for your iPhone: countdown, itinerary, packing list, documents and a multi-currency budget for every trip, in one place. It works offline, needs no account, and keeps everything on your phone.
@@ -16,7 +16,7 @@ Jalan is a travel planner for your iPhone: countdown, itinerary, packing list, d
 2. Tap **Share → Add to Home Screen → Add**.
 3. Open Jalan from your Home Screen and tap **+** to add your first trip.
 
-New to Jalan? Read the step-by-step **[User guide](GUIDE.md)**.
+New to Jalan? Read the illustrated guide: **[How to use Jalan](https://fadzly27.github.io/jalan/guide.html)** (text version: [GUIDE.md](GUIDE.md)).
 
 ---
 

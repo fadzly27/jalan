@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ChevronLeft, Coins, Download, Lock, Moon, Upload, Trash2, Sparkles, Info, CircleAlert } from 'lucide-react';
+import { ChevronLeft, Coins, Download, Lock, Moon, Upload, Trash2, Sparkles, Info, CircleAlert, BookOpen } from 'lucide-react';
 import { Group, Header, Row, Segmented, Sheet, TextButton, SW, toast } from '../ui.jsx';
 import { CurrencyPicker } from '../pickers.jsx';
 import { useStore } from '../store.jsx';
@@ -84,6 +84,7 @@ export default function Settings() {
         </Group>
 
         <Group title="About" footer="Jalan keeps everything on this device. No account, no server.">
+          <Row icon={BookOpen} iconColor="#0066CC" title="How to use Jalan" onClick={() => { window.location.href = './guide.html'; }} />
           <Row icon={Info} iconColor="#8E8E93" title="Jalan" value="1.0" last />
         </Group>
       </div>

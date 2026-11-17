@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jalan Guide</title>
+<meta name="description" content="How to use Jalan, step by step: install, add a trip, plan, pack, save documents and track spending.">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<style>
+  :root {
+    --bg: #F2F2F7; --card: #FFFFFF; --label: #000000; --sec: #6C6C70; --sep: rgba(60,60,67,.18);
+    --accent: #0066CC; --accent-soft: rgba(0,102,204,.1); --ok: #1E7B34; --ok-soft: rgba(36,166,72,.13);
+    --warn: #B35600; --warn-soft: rgba(230,126,0,.13); --chip: #FFFFFF; --ui: #E9E9EE;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000; --card: #1C1C1E; --label: #FFFFFF; --sec: #98989F; --sep: rgba(84,84,88,.6);
+      --accent: #409CFF; --accent-soft: rgba(64,156,255,.16); --ok: #30D158; --ok-soft: rgba(48,209,88,.16);
+      --warn: #FF9F0A; --warn-soft: rgba(255,159,10,.16); --chip: #1C1C1E; --ui: #2C2C2E;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--label);
+    font: 17px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 28px) 16px calc(env(safe-area-inset-bottom) + 40px); }
+  a { color: var(--accent); }
+  svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* Header */
+  .hero { text-align: center; }
+  .hero img { width: 88px; height: 88px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,102,204,.28); }
+  h1 { font-size: 34px; line-height: 1.15; margin: 16px 0 6px; letter-spacing: -.01em; }
+  .lead { color: var(--sec); margin: 0 auto; max-width: 30em; }
+  .open {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 28px; margin-top: 20px;
+    background: var(--accent); color: #fff; border-radius: 14px; font-weight: 600; text-decoration: none;
+  }
+  .open:active { opacity: .85; transform: scale(.98); }
+
+  /* Quick start */
+  .quick { background: var(--card); border-radius: 20px; padding: 18px 18px 6px; margin-top: 28px; }
+  .quick h2 { font-size: 20px; margin: 0 0 10px; }
+  .quick ol { list-style: none; margin: 0; padding: 0; counter-reset: q; }
+  .quick li { counter-increment: q; display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid var(--sep); }
+  .quick li:first-child { border-top: 0; }
+  .quick li::before {
+    content: counter(q); flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff;
+    font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+
+  /* Contents chips */
+  nav.toc { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 24px 0 8px; }
+  nav.toc a {
+    min-height: 40px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 999px;
+    background: var(--chip); color: var(--accent); text-decoration: none; font-size: 15px; font-weight: 500;
+  }
+  nav.toc svg.i { width: 17px; height: 17px; }
+
+  /* Sections */
+  section { margin-top: 40px; scroll-margin-top: 16px; }
+  .sh { display: flex; align-items: center; gap: 12px; }
+  .num {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--ok); color: #fff; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex: none;
+  }
+  @media (prefers-color-scheme: dark) { .num { color: #000; } }
+  h2 { font-size: 24px; line-height: 1.2; margin: 0; }
+  .goal { color: var(--sec); margin: 8px 0 14px; }
+  h3 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--sec); font-weight: 600; margin: 22px 4px 8px; }
+
+  .steps { background: var(--card); border-radius: 20px; overflow: hidden; }
+  .step { display: flex; gap: 14px; padding: 14px 16px; }
+  .step + .step { border-top: 1px solid var(--sep); }
+  .step .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; flex: none; }
+  .step b { font-weight: 600; }
+  .step p { margin: 0; }
+  .step small { display: block; color: var(--sec); font-size: 15px; line-height: 1.4; margin-top: 2px; }
+
+  /* An on-screen control, drawn like the app's own buttons */
+  .ui {
+    display: inline-flex; align-items: center; gap: 4px; padding: 1px 9px; border-radius: 8px; background: var(--ui);
+    color: var(--accent); font-weight: 600; font-size: .94em; white-space: nowrap; vertical-align: 1px;
+  }
+  .ui svg.i { width: 15px; height: 15px; stroke-width: 2.25; }
+  .ui.solid { background: var(--accent); color: #fff; }
+
+  .note { display: flex; gap: 10px; padding: 14px 16px; border-radius: 16px; margin-top: 12px; font-size: 16px; }
+  .note p { margin: 0; }
+  .note.tip { background: var(--accent-soft); }
+  .note.tip svg.i { color: var(--accent); }
+  .note.warn { background: var(--warn-soft); }
+  .note.warn svg.i { color: var(--warn); }
+  .note.ok { background: var(--ok-soft); }
+  .note.ok svg.i { color: var(--ok); }
+
+  /* Screenshots */
+  .shots { display: flex; gap: 14px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  figure { margin: 0; text-align: center; }
+  figure img {
+    width: 230px; max-width: 100%; height: auto; border-radius: 26px; display: block;
+    border: 6px solid var(--card); box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  }
+  figcaption { font-size: 14px; color: var(--sec); margin-top: 8px; }
+  .shots.two figure img { width: 200px; }
+
+  /* Meaning list */
+  .defs { background: var(--card); border-radius: 20px; padding: 4px 16px; margin-top: 12px; }
+  .defs div { display: flex; gap: 12px; padding: 11px 0; }
+  .defs div + div { border-top: 1px solid var(--sep); }
+  .defs dt { font-weight: 600; min-width: 96px; margin: 0; }
+  .defs dd { margin: 0; color: var(--sec); }
+
+  /* Tab tiles */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .tile { background: var(--card); border-radius: 18px; padding: 14px; text-decoration: none; color: inherit; display: block; min-height: 44px; }
+  .tile .ic { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .tile b { display: block; margin-top: 10px; }
+  .tile span { color: var(--sec); font-size: 14px; }
+
+  /* FAQ */
+  details { background: var(--card); border-radius: 16px; margin-top: 10px; }
+  summary { list-style: none; cursor: pointer; padding: 14px 16px; min-height: 48px; font-weight: 600; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--accent); font-size: 22px; font-weight: 400; line-height: 1; }
+  details[open] summary::after { content: "−"; }
+  details p { margin: 0; padding: 0 16px 16px; color: var(--sec); }
+
+  footer { text-align: center; margin-top: 48px; color: var(--sec); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+
+  <header class="hero">
+    <img src="./icon-192.png" alt="Jalan app icon">
+    <h1>How to use Jalan</h1>
+    <p class="lead">Your trip countdown, plans, packing list, documents and budget, all in one app. This guide takes about 5 minutes.</p>
+    <a class="open" href="./">Open Jalan <i data-i="arrow"></i></a>
+  </header>
+
+  <div class="quick">
+    <h2>The short version</h2>
+    <ol>
+      <li><span><b>Install it once</b> from Safari: Share, then Add to Home Screen.</span></li>
+      <li><span><b>Add a trip</b> with <span class="ui"><i data-i="plus"></i></span>. Don't forget to tap <span class="ui">Choose country</span>.</span></li>
+      <li><span><b>Back up once a month</b> in Settings. Your trips live only on your phone.</span></li>
+    </ol>
+  </div>
+
+  <nav class="toc" aria-label="Contents">
+    <a href="#install"><i data-i="phone"></i>Install</a>
+    <a href="#trips"><i data-i="home"></i>Trips screen</a>
+    <a href="#add"><i data-i="plus"></i>Add a trip</a>
+    <a href="#tabs"><i data-i="grid"></i>The 5 tabs</a>
+    <a href="#itinerary"><i data-i="calendar"></i>Plans</a>
+    <a href="#packing"><i data-i="luggage"></i>Packing</a>
+    <a href="#docs"><i data-i="file"></i>Documents</a>
+    <a href="#budget"><i data-i="wallet"></i>Money</a>
+    <a href="#backup"><i data-i="download"></i>Backup</a>
+    <a href="#faq"><i data-i="help"></i>Questions</a>
+  </nav>
+
+  <!-- 1 -->
+  <section id="install">
+    <div class="sh"><span class="num">1</span><h2>Install on your iPhone</h2></div>
+    <p class="goal">You only do this once. Afterwards Jalan opens from your Home Screen like any app.</p>
+    <div class="steps">
+      <div class="step"><span class="ic"><i data-i="compass"></i></span><p><b>Open this page in Safari</b> and tap <span class="ui solid">Open Jalan</span> at the top.<small>It must be Safari. Chrome on iPhone can't install apps like this.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="share"></i></span><p>Tap the <b>Share</b> button<small>The square with an arrow pointing up, at the bottom of the screen.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="plussq"></i></span><p>Tap <b>Add to Home Screen</b><small>Can't see it? Scroll down a little in that menu.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="check"></i></span><p>Tap <b>Add</b><small>The blue Jalan icon appears on your Home Screen.</small></p></div>
+    </div>
+    <div class="note tip"><i data-i="bulb"></i><p>Always open Jalan from its Home Screen icon. It works without internet after the first time.</p></div>
+  </section>
+
+  <!-- 2 -->
+  <section id="trips">
+    <div class="sh"><span class="num">2</span><h2>The Trips screen</h2></div>
+    <p class="goal">This is the first thing you see. Your next trip is always at the top.</p>
+    <div class="shots"><figure><img src="./guide/trips.jpg" alt="Trips screen showing the next trip, 8 days to go, and a things to do row" loading="lazy" width="750" height="1624"><figcaption>The Trips screen</figcaption></figure></div>
+    <h3>What the numbers mean</h3>
+    <dl class="defs">
+      <div><dt>Days to go</dt><dd>How many days until the trip starts.</dd></div>
+      <div><dt>Ready</dt><dd>How prepared you are: packing, documents and to-dos together.</dd></div>
+      <div><dt>Packed</dt><dd>Items ticked off your packing list.</dd></div>
+      <div><dt>Spent</dt><dd>How much of your budget you have used.</dd></div>
+      <div><dt>Orange row</dt><dd>Things to do, like missing documents. Tap it to see them.</dd></div>
+    </dl>
+    <div class="note tip"><i data-i="settings"></i><p>The gear at the top left opens <b>Settings</b>. The <span class="ui"><i data-i="plus"></i></span> at the top right adds a trip.</p></div>
+  </section>
+
+  <!-- 3 -->
+  <section id="add">
+    <div class="sh"><span class="num">3</span><h2>Add a trip</h2></div>
+    <p class="goal">You only need a country and the dates. Everything else is optional.</p>
+    <div class="steps">
+      <div class="step"><span class="ic"><i data-i="plus"></i></span><p>Tap <span class="ui"><i data-i="plus"></i></span> at the top right of Trips</p></div>
+      <div class="step"><span class="ic"><i data-i="pencil"></i></span><p>Type a <b>Name</b><small>For example "Japan spring trip". Optional.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="globe"></i></span><p>Tap <span class="ui">Choose country</span>, search, and tap the country<small>Then type the city next to it. Going to more places? Tap <b>Add destination</b>.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="calendar"></i></span><p>Pick the <b>Start</b> and <b>End</b> dates<small>Jalan counts the nights for you.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="wallet"></i></span><p>Type your total <b>Budget</b> in RM<small>Optional. You can add a cover photo too.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="check"></i></span><p>Tap <span class="ui">Add</span> at the top right</p></div>
+    </div>
+    <div class="note warn"><i data-i="alert"></i><p><b>Most common mistake:</b> typing a city without tapping <b>Choose country</b>. If you forget, Jalan tells you and the button turns orange.</p></div>
+    <div class="shots"><figure><img src="./guide/new-trip.jpg" alt="New Trip form with Japan and Tokyo filled in" loading="lazy" width="750" height="1624"><figcaption>A trip ready to add</figcaption></figure></div>
+  </section>
+
+  <!-- 4 -->
+  <section id="tabs">
+    <div class="sh"><span class="num">4</span><h2>Inside your trip: 5 tabs</h2></div>
+    <p class="goal">Tap a trip to open it. The tabs are at the bottom of the screen. <span class="ui"><i data-i="back"></i>Trips</span> at the top takes you back.</p>
+    <div class="tiles">
+      <a class="tile" href="#trips"><span class="ic" style="background:#0066CC"><i data-i="grid"></i></span><b>Overview</b><span>Countdown, next plan, to-dos</span></a>
+      <a class="tile" href="#itinerary"><span class="ic" style="background:#5856D6"><i data-i="calendar"></i></span><b>Itinerary</b><span>Your plans, day by day</span></a>
+      <a class="tile" href="#packing"><span class="ic" style="background:#AF52DE"><i data-i="luggage"></i></span><b>Packing</b><span>What to bring</span></a>
+      <a class="tile" href="#docs"><span class="ic" style="background:#B35600"><i data-i="file"></i></span><b>Docs</b><span>Passport, tickets, bookings</span></a>
+      <a class="tile" href="#budget"><span class="ic" style="background:#1E7B34"><i data-i="wallet"></i></span><b>Budget</b><span>What you spend</span></a>
+    </div>
+    <div class="shots"><figure><img src="./guide/overview.jpg" alt="Trip overview with countdown, Trip ready 57 percent and four tiles" loading="lazy" width="750" height="1624"><figcaption>Overview: tap any tile to jump there</figcaption></figure></div>
+  </section>
+
+  <!-- 5 -->
+  <section id="itinerary">
+    <div class="sh"><span class="num">5</span><h2>Plan your days</h2></div>
+    <p class="goal">Open the <b>Itinerary</b> tab. Each day has its own list of plans.</p>
+    <div class="steps">
+      <div class="step"><span class="ic"><i data-i="calendar"></i></span><p>Tap a <b>day</b> in the strip at the top</p></div>
+      <div class="step"><span class="ic"><i data-i="plus"></i></span><p>Tap <span class="ui"><i data-i="plus"></i></span>, type what and where<small>For example "Flight to Seoul" at "KL International Airport".</small></p></div>
+      <div class="step"><span class="ic"><i data-i="tag"></i></span><p>Pick a <b>category</b> and a <b>time</b>, then tap <span class="ui">Add</span><small>Flight, Transport, Stay, Food, Sightseeing or Free time. Each has its own colour.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="pin"></i></span><p>Need directions? Tap a plan, then <span class="ui">Apple Maps</span> or <span class="ui">Google Maps</span></p></div>
+      <div class="step"><span class="ic"><i data-i="updown"></i></span><p>Change the order: tap <span class="ui">Edit</span> and use the arrows</p></div>
+    </div>
+    <div class="shots"><figure><img src="./guide/itinerary.jpg" alt="Itinerary for Wednesday 25 November with four plans" loading="lazy" width="750" height="1624"><figcaption>One day's plans</figcaption></figure></div>
+  </section>
+
+  <!-- 6 -->
+  <section id="packing">
+    <div class="sh"><span class="num">6</span><h2>Pack your bag</h2></div>
+    <p class="goal">Open the <b>Packing</b> tab. Tick things off as they go in the bag.</p>
+    <div class="steps">
+      <div class="step"><span class="ic"><i data-i="check"></i></span><p><b>Tap an item</b> to tick it<small>It turns green and gets crossed out. Tap again to undo.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="plus"></i></span><p>Add your own with <span class="ui"><i data-i="plus"></i></span></p></div>
+      <div class="step"><span class="ic"><i data-i="bulb"></i></span><p>Scroll down for <b>suggestions</b> and tap to add<small>Based on how long you're away and the weather, like hand warmers in winter.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="copy"></i></span><p>Reuse your list next trip: <span class="ui">•••</span> then <b>Save as Template</b></p></div>
+    </div>
+    <div class="shots"><figure><img src="./guide/packing.jpg" alt="Packing list, 10 of 18 packed" loading="lazy" width="750" height="1624"><figcaption>Ticked items are crossed out</figcaption></figure></div>
+  </section>
+
+  <!-- 7 -->
+  <section id="docs">
+    <div class="sh"><span class="num">7</span><h2>Keep your documents</h2></div>
+    <p class="goal">Open the <b>Docs</b> tab. Save photos of your passport, tickets and bookings so you have them even without internet.</p>
+    <div class="steps">
+      <div class="step"><span class="ic"><i data-i="plus"></i></span><p>Tap <span class="ui"><i data-i="plus"></i></span> and pick the type<small>Passport, flight ticket, hotel booking, insurance, visa or other.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="camera"></i></span><p>Tap <span class="ui">Add photo or PDF</span><small>Take a photo, or choose a screenshot or PDF.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="check"></i></span><p>Set the status and tap <span class="ui">Add</span><small>Green = Valid or Booked. Orange = To check or Missing.</small></p></div>
+    </div>
+    <div class="note warn"><i data-i="alert"></i><p><b>Orange boxes</b> at the top warn you, for example when insurance is missing or your passport expires within 6 months of the trip. Tap one to fix it.</p></div>
+    <div class="note tip"><i data-i="lock"></i><p>Want privacy? <b>Settings → Set PIN for Documents</b> locks this tab with 4 digits.</p></div>
+    <div class="note ok"><i data-i="heart"></i><p>At the bottom is your <b>Emergency card</b>: contacts, blood type and embassy. Tap <b>Share</b> to send it to family.</p></div>
+    <div class="shots"><figure><img src="./guide/docs.jpg" alt="Documents tab with two warnings and four document cards" loading="lazy" width="750" height="1624"><figcaption>Warnings on top, documents below</figcaption></figure></div>
+  </section>
+
+  <!-- 8 -->
+  <section id="budget">
+    <div class="sh"><span class="num">8</span><h2>Track your money</h2></div>
+    <p class="goal">Open the <b>Budget</b> tab. Jalan works in two currencies at once, so you always know the price in RM.</p>
+    <h3>Add what you spend</h3>
+    <div class="steps">
+      <div class="step"><span class="ic"><i data-i="plus"></i></span><p>Tap the blue <span class="ui solid"><i data-i="plus"></i></span> at the top right</p></div>
+      <div class="step"><span class="ic"><i data-i="hash"></i></span><p>Type the amount on the keypad<small>The green bubble shows it in RM straight away, like "₩ 15,000 → RM 45.99".</small></p></div>
+      <div class="step"><span class="ic"><i data-i="swap"></i></span><p>Check the currency you paid in<small>It picks the local currency for you. Paid in RM? Tap RM.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="tag"></i></span><p>Pick a category and tap <span class="ui">Add Expense</span><small>Optional: a note, another date, or a photo of the receipt.</small></p></div>
+    </div>
+    <div class="shots two">
+      <figure><img src="./guide/add-expense.jpg" alt="Add expense keypad showing 15,000 won converted to RM 45.99" loading="lazy" width="750" height="1624"><figcaption>Adding an expense</figcaption></figure>
+      <figure><img src="./guide/budget.jpg" alt="Budget tab with spent, left and per day amounts" loading="lazy" width="750" height="1624"><figcaption>Your budget at a glance</figcaption></figure>
+    </div>
+    <h3>Reading the budget</h3>
+    <dl class="defs">
+      <div><dt>RM | Won</dt><dd>Switch to see every amount in that currency.</dd></div>
+      <div><dt>Left</dt><dd>Money still left in your budget.</dd></div>
+      <div><dt>Per day</dt><dd>How much you can spend each day for the rest of the trip.</dd></div>
+      <div><dt>Orange bar</dt><dd>That category is over budget.</dd></div>
+    </dl>
+    <div class="note tip"><i data-i="swap"></i><p>Got a better rate at the money changer? Tap <span class="ui">Change</span> next to the exchange rate and choose <b>My own rate</b>. Old expenses keep the rate they were saved with.</p></div>
+  </section>
+
+  <!-- 9 -->
+  <section id="backup">
+    <div class="sh"><span class="num">9</span><h2>Back up once a month</h2></div>
+    <p class="goal">Your trips are saved only on your phone. Nobody else can see them, so a backup file is your safety net.</p>
+    <div class="steps">
+      <div class="step"><span class="ic"><i data-i="settings"></i></span><p>On the Trips screen, tap the <b>gear</b> to open Settings</p></div>
+      <div class="step"><span class="ic"><i data-i="download"></i></span><p>Tap <span class="ui">Export all data</span><small>Save the file to Files or iCloud Drive, or send it to yourself.</small></p></div>
+      <div class="step"><span class="ic"><i data-i="upload"></i></span><p>To restore on a new phone: <span class="ui">Import backup</span> and pick that file</p></div>
+    </div>
+    <div class="note warn"><i data-i="alert"></i><p>Deleting the Jalan icon, or clearing Safari's website data, also deletes your trips. Back up first.</p></div>
+  </section>
+
+  <!-- 10 -->
+  <section id="faq">
+    <div class="sh"><span class="num">?</span><h2>Questions</h2></div>
+    <details><summary>Does it work without internet?</summary><p>Yes. After you open it once, everything works offline. Only the live exchange rate needs internet, and the last rate is saved.</p></details>
+    <details><summary>The Add button does nothing</summary><p>A country is missing. Tap <b>Choose country</b> under Destinations, pick one, then tap <b>Add</b>.</p></details>
+    <details><summary>How do I get the newest version?</summary><p>Open Jalan, close it fully (swipe it away), then open it again. It updates by itself.</p></details>
+    <details><summary>How do I remove the sample trip?</summary><p>Go to <b>Settings → Clear sample data</b>. It removes the Seoul – Busan example.</p></details>
+    <details><summary>Can I change or delete a trip?</summary><p>Open the trip and tap <b>Edit</b> at the top right. <b>Delete Trip</b> is at the bottom.</p></details>
+    <details><summary>Does Jalan send me notifications?</summary><p>No. Reminders show in the orange "things to do" row when you open the app, so open it now and then.</p></details>
+  </section>
+
+  <div class="hero" style="margin-top:44px">
+    <a class="open" href="./">Open Jalan <i data-i="arrow"></i></a>
+  </div>
+  <footer>Jalan keeps everything on your phone. No account needed.</footer>
+</main>
+
+<script>
+  // Thin line icons (Lucide paths), injected so the markup above stays readable.
+  var P = {
+    arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+    plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+    plussq: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/>',
+    phone: '<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
+    home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    grid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+    calendar: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>',
+    luggage: '<path d="M6 20a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2"/><path d="M8 18V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14"/><path d="M10 20h4"/><circle cx="16" cy="20" r="2"/><circle cx="8" cy="20" r="2"/>',
+    file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 13H8"/><path d="M16 17H8"/>',
+    wallet: '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+    upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+    help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+    compass: '<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/>',
+    share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/>',
+    check: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    bulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+    settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    pencil: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
+    globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+    back: '<path d="m15 18-6-6 6-6"/>',
+    tag: '<path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5"/>',
+    pin: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+    updown: '<path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>',
+    copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
+    lock: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+    hash: '<path d="M4 9h16"/><path d="M4 15h16"/><path d="M10 3 8 21"/><path d="M16 3l-2 18"/>',
+    swap: '<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>'
+  };
+  document.querySelectorAll('i[data-i]').forEach(function (el) {
+    var d = P[el.getAttribute('data-i')];
+    if (!d) return;
+    el.outerHTML = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">' + d + '</svg>';
+  });
+</script>
+</body>
+</html>
