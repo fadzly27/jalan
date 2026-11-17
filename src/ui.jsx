@@ -71,6 +71,19 @@ export function Header({ title, overline, left, right, className }) {
   );
 }
 
+// Compact iOS navigation bar with a centred inline title
+export function NavBar({ left, title, right }) {
+  return (
+    <div className="sticky top-0 z-30 blurbar pt-safe">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center h-11 px-2">
+        <div className="justify-self-start flex items-center min-w-0 pl-2">{left}</div>
+        <div className="text-[17px] font-semibold truncate max-w-[52vw] text-center">{title}</div>
+        <div className="justify-self-end flex items-center">{right}</div>
+      </div>
+    </div>
+  );
+}
+
 export function Segmented({ options, value, onChange, className }) {
   const idx = Math.max(0, options.findIndex((o) => o.value === value));
   return (
@@ -94,13 +107,13 @@ export function Segmented({ options, value, onChange, className }) {
   );
 }
 
-export function ProgressRing({ pct, size = 64, stroke = 7, tone }) {
+export function ProgressRing({ pct, size = 64, stroke = 7, tone, track = 'rgb(var(--fill) / 0.18)' }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const color = tone || (pct >= 100 ? 'rgb(var(--ok))' : pct >= 50 ? 'rgb(var(--accent))' : 'rgb(var(--warn))');
   return (
     <svg width={size} height={size} className="-rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgb(var(--fill) / 0.18)" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={track} strokeWidth={stroke} />
       <circle
         cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
         strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(100, pct) / 100)}
@@ -122,8 +135,8 @@ export function ProgressBar({ pct, tone = 'accent', className }) {
 export function Badge({ tone = 'accent', solid, children, className }) {
   const map = {
     accent: solid ? 'bg-accent text-white' : 'bg-accent/[0.12] text-accent',
-    ok: solid ? 'bg-ok text-white' : 'bg-ok/[0.14] text-ok',
-    warn: solid ? 'bg-warn text-white' : 'bg-warn/[0.15] text-warn',
+    ok: solid ? 'bg-ok-ink text-white' : 'bg-ok/[0.14] text-ok',
+    warn: solid ? 'bg-warn-ink text-white' : 'bg-warn/[0.15] text-warn',
     grey: 'bg-fill/[0.14] text-tertiary',
   };
   return <span className={cx('inline-flex items-center rounded-full px-2.5 py-[3px] text-[12px] font-semibold whitespace-nowrap', map[tone], className)}>{children}</span>;

@@ -149,6 +149,14 @@ export function planTip(plan, now = Date.now()) {
   }
 }
 
+// Tip only when it matters now: flight check-in window, or the plan is within a day.
+export function relevantTip(plan, now = Date.now()) {
+  const hrs = (planTime(plan) - now) / 3600000;
+  if (plan.category === 'flight' && hrs > 0 && hrs <= 48) return 'Online check-in is open – check in now to pick your seat.';
+  if (hrs > 0 && hrs <= 24) return planTip(plan, now);
+  return null;
+}
+
 // ---------- packing ----------
 export function seasonLabel(trip) {
   const s = season(trip);

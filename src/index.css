@@ -8,13 +8,16 @@
   --card2: 242 242 247;
   --label: 0 0 0;
   --secondary: 60 60 67;
-  --tertiary: 142 142 147;
+  --tertiary: 108 108 112;
   --sep: 198 198 200;
   --fill: 118 118 128;
   --accent: 0 102 204;
   --ok: 36 166 72;
   --warn: 230 126 0;
-  --danger: 230 48 40;
+  --danger: 200 40 32;
+  /* text-safe versions of the status colours (>= 4.5:1 on white and #F2F2F7) */
+  --ok-ink: 30 123 52;
+  --warn-ink: 179 86 0;
   color-scheme: light;
 }
 
@@ -24,15 +27,25 @@
   --card2: 44 44 46;
   --label: 255 255 255;
   --secondary: 235 235 245;
-  --tertiary: 142 142 147;
+  --tertiary: 152 152 159;
   --sep: 56 56 58;
   --fill: 118 118 128;
   --accent: 64 156 255;
   --ok: 48 209 88;
   --warn: 255 159 10;
   --danger: 255 69 58;
+  --ok-ink: 48 209 88;
+  --warn-ink: 255 159 10;
   color-scheme: dark;
 }
+
+/* Status colours used as text use the high-contrast "ink" shade. */
+.text-ok { color: rgb(var(--ok-ink)); }
+.text-warn { color: rgb(var(--warn-ink)); }
+.bg-ok-ink { background-color: rgb(var(--ok-ink)); }
+.bg-warn-ink { background-color: rgb(var(--warn-ink)); }
+.dark .bg-ok-ink { background-color: rgb(30 140 60); }
+.dark .bg-warn-ink { background-color: rgb(179 86 0); }
 
 html, body, #root { height: 100%; }
 html, body { overflow-x: hidden; }

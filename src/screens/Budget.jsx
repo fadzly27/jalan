@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeftRight, CircleAlert, Lock, Pencil, Plus, Receipt, RefreshCw, Wifi, WifiOff, Trash2, Paperclip } from 'lucide-react';
-import { Card, Empty, Field, Group, Header, IconButton, Money, PrimaryButton, ProgressBar, Segmented, Sheet, SW, TextButton, cx, inputCls, toast } from '../ui.jsx';
+import { ChevronRight, CircleAlert, Pencil, Plus, Receipt, RefreshCw, Trash2, Paperclip } from 'lucide-react';
+import { Card, Empty, Field, Group, Money, NavBar, PrimaryButton, ProgressBar, Segmented, Sheet, SW, TextButton, cx, inputCls, toast } from '../ui.jsx';
 import { OptionList, CurrencyPicker } from '../pickers.jsx';
 import { useStore } from '../store.jsx';
 import { BackButton } from './Trip.jsx';
@@ -10,16 +10,21 @@ import { BUDGET_META } from '../meta.jsx';
 import { currencyName, fmtNumber, money, symbol } from '../lib/currency.js';
 import { fmtDateTime, fmtDay } from '../lib/dates.js';
 
-const shortName = (code) => {
-  const n = currencyName(code);
-  return n.split(' ').pop();
-};
+const shortName = (code) => currencyName(code).split(' ').pop();
 
 const fmtRate = (r, code) => {
   if (!r) return '—';
   const dp = r >= 100 ? 0 : r >= 1 ? 2 : 4;
   return fmtNumber(r, code, dp);
 };
+
+const fmtUpdated = (ts) => {
+  const d = new Date(ts);
+  if (d.toDateString() === new Date().toDateString()) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return fmtDateTime(ts);
+};
+
+const SOFT = 'text-[#D1D1D6]'; // secondary text inside the dark card (~80% white)
 
 export default function Budget({ trip }) {
   const { settings, updateTrip } = useStore();
@@ -28,9 +33,8 @@ export default function Budget({ trip }) {
   const [disp, setDisp] = useState(home);
   const [adding, setAdding] = useState(false);
   const [editExp, setEditExp] = useState(null);
-  const [rateCode, setRateCode] = useState(null);
+  const [rateOpen, setRateOpen] = useState(false);
   const [editBudget, setEditBudget] = useState(false);
-  const [addCur, setAddCur] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => { if (disp !== home && !locals.includes(disp)) setDisp(home); }, [locals.join(), home]); // eslint-disable-line
@@ -38,27 +42,29 @@ export default function Budget({ trip }) {
   const b = budgetStats(trip, settings);
   const other = disp === home ? locals[0] : home;
   const conv = (h, code) => { const r = rateFor(trip, code, settings); return r ? h * r : null; };
+  const inDisp = (h) => conv(h, disp);
 
-  // Primary in the selected currency, the other currency in small grey text.
-  const Dual = ({ h, big, light, align = 'left' }) => {
-    const p = conv(h, disp);
-    const o = other ? conv(h, other) : null;
-    return (
-      <div className={align === 'right' ? 'text-right' : ''}>
-        <div className={cx('font-semibold tabular-nums', big ? 'text-[34px] leading-tight tracking-tight' : 'text-[17px]')}>
-          {p == null ? '—' : <Money amount={p} code={disp} short={!big} whole={!big} />}
-        </div>
-        {o != null && other && <div className={cx('text-[13px] tabular-nums', light ? 'text-white/55' : 'text-tertiary')}>≈ <Money amount={o} code={other} /></div>}
-      </div>
-    );
-  };
+  const spentD = inDisp(b.spent);
+  const spentO = other ? conv(b.spent, other) : null;
+  const totalD = inDisp(b.total);
+
+  // Rate status line
+  const firstLocal = locals[0];
+  const firstRate = firstLocal ? rateFor(trip, firstLocal, settings) : null;
+  const src = firstLocal ? rateSource(trip, firstLocal, settings) : null;
+  const rateOk = firstLocal && firstRate && !src.stale;
+  const srcText = !src ? '' : !firstRate ? 'no rate yet' : src.mode === 'manual' ? 'my own rate' : src.mode === 'locked' ? 'locked rate' : src.stale ? 'last known rate' : `live rate, updated ${fmtUpdated(src.time)}`;
 
   const expenses = [...trip.expenses].sort((a, b2) => b2.date.localeCompare(a.date) || b2.createdAt - a.createdAt);
   const shown = showAll ? expenses : expenses.slice(0, 15);
 
   return (
     <div>
-      <Header left={<BackButton />} right={<IconButton icon={Plus} label="Add expense" onClick={() => setAdding(true)} />} title="Budget" />
+      <NavBar left={<BackButton />} title="Budget" right={
+        <button onClick={() => setAdding(true)} aria-label="Add expense" className="press h-11 w-11 flex items-center justify-center">
+          <span className="h-[30px] w-[30px] rounded-full bg-accent text-white flex items-center justify-center"><Plus size={20} strokeWidth={2.25} /></span>
+        </button>
+      } />
       <div className="px-4">
         {locals.length > 0 && (
           <Segmented
@@ -69,67 +75,61 @@ export default function Budget({ trip }) {
           />
         )}
 
+        {/* Summary */}
         <div className="mt-3 rounded-card p-5 bg-[#1C1C1E] dark:bg-card2 text-white">
           <div className="flex items-start justify-between">
-            <div>
-              <div className="text-[13px] font-semibold uppercase tracking-wide text-white/55">Spent</div>
-              <Dual h={b.spent} big light />
+            <div className="min-w-0">
+              <div className={cx('text-[13px] font-semibold uppercase tracking-wide', SOFT)}>Spent</div>
+              <div className="text-[38px] font-bold leading-tight tracking-tight tabular-nums truncate">
+                {spentD == null ? '—' : <Money amount={spentD} code={disp} short={false} />}
+              </div>
+              <div className={cx('text-[15px] tabular-nums', SOFT)}>
+                {spentO != null && <>≈ <Money amount={spentO} code={other} /> · </>}
+                of {totalD == null ? '—' : <Money amount={totalD} code={disp} whole />}
+              </div>
             </div>
-            <button onClick={() => setEditBudget(true)} aria-label="Edit budget" className="press h-11 w-11 -mr-2 -mt-1 rounded-full flex items-center justify-center text-white/70">
+            <button onClick={() => setEditBudget(true)} aria-label="Edit budget" className={cx('press h-11 w-11 -mr-2 -mt-1 rounded-full flex items-center justify-center shrink-0', SOFT)}>
               <Pencil size={18} strokeWidth={SW} />
             </button>
           </div>
-          <ProgressBar pct={b.total ? (b.spent / b.total) * 100 : 0} tone={b.left < 0 ? 'warn' : 'ok'} className="mt-3 !bg-white/15" />
-          <div className="grid grid-cols-3 gap-3 mt-4">
-            <div><div className="text-[12px] text-white/55 uppercase tracking-wide">Budget</div><Dual h={b.total} light /></div>
-            <div><div className={cx('text-[12px] uppercase tracking-wide', b.left < 0 ? 'text-warn' : 'text-white/55')}>{b.left < 0 ? 'Over' : 'Left'}</div><Dual h={Math.abs(b.left)} light /></div>
-            <div><div className="text-[12px] text-white/55 uppercase tracking-wide">Per day</div><Dual h={Math.max(0, b.perDay)} light /><div className="text-[11px] text-white/45">{b.daysLeft} day{b.daysLeft === 1 ? '' : 's'} left</div></div>
+          <ProgressBar pct={b.total ? (b.spent / b.total) * 100 : 0} tone={b.left < 0 ? 'warn' : 'ok'} className="mt-3 !bg-white/20" />
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <div>
+              <div className={cx('text-[13px] uppercase tracking-wide', b.left < 0 ? 'text-[#FFB340]' : SOFT)}>{b.left < 0 ? 'Over budget' : 'Left'}</div>
+              <div className="text-[20px] font-semibold tabular-nums">{inDisp(Math.abs(b.left)) == null ? '—' : <Money amount={inDisp(Math.abs(b.left))} code={disp} short={false} />}</div>
+            </div>
+            <div>
+              <div className={cx('text-[13px] uppercase tracking-wide', SOFT)}>Per day · {b.daysLeft} {b.daysLeft === 1 ? 'day' : 'days'} left</div>
+              <div className="text-[20px] font-semibold tabular-nums">{inDisp(Math.max(0, b.perDay)) == null ? '—' : <Money amount={inDisp(Math.max(0, b.perDay))} code={disp} short={false} />}</div>
+            </div>
           </div>
         </div>
 
-        {/* Exchange rates */}
-        <section className="mt-6">
-          <div className="flex items-end justify-between px-4 pb-1.5">
-            <h2 className="text-[13px] uppercase tracking-wide text-tertiary">Exchange rate</h2>
-            <button onClick={() => setAddCur(true)} className="text-[15px] text-accent min-h-[32px]">Add currency</button>
-          </div>
-          {locals.length === 0 ? (
-            <Card className="p-4"><p className="text-[15px] text-tertiary">This trip only uses {currencyName(home)}. Tap Add currency if you will pay in another one.</p></Card>
-          ) : (
-            <div className="bg-card rounded-card overflow-hidden">
-              {locals.map((c, i) => {
-                const r = rateFor(trip, c, settings);
-                const src = rateSource(trip, c, settings);
-                const Icon = src.mode === 'locked' ? Lock : src.mode === 'manual' ? Pencil : src.stale ? WifiOff : Wifi;
-                return (
-                  <div key={c} className={cx('flex items-center gap-3 px-4 min-h-[64px] py-2.5', i < locals.length - 1 && 'border-b hairline')}>
-                    <ArrowLeftRight size={20} strokeWidth={SW} className="text-tertiary shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[17px] font-semibold tabular-nums">{symbol(home)} 1 = {symbol(c)} {fmtRate(r, c)}</div>
-                      <div className={cx('text-[13px] flex items-center gap-1', src.stale || !r ? 'text-warn' : 'text-tertiary')}>
-                        <Icon size={12} strokeWidth={2} />
-                        {!r ? 'No rate yet – tap Change to enter one' : src.label}{src.time ? ` · updated ${fmtDateTime(src.time)}` : ''}
-                      </div>
-                    </div>
-                    <button onClick={() => setRateCode(c)} className="press min-h-[36px] rounded-full bg-fill/[0.12] px-3.5 text-[15px] font-semibold text-accent">Change</button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
+        {/* Exchange rate line */}
+        <button onClick={() => setRateOpen(true)} className="press w-full min-h-[44px] mt-1 flex items-center gap-2 px-1 text-left">
+          <span className={cx('h-2 w-2 rounded-full shrink-0', firstLocal ? (rateOk ? 'bg-ok' : 'bg-warn') : 'bg-tertiary')} />
+          <span className="flex-1 min-w-0 text-[13px] text-tertiary truncate">
+            {firstLocal ? (
+              <>
+                <span className="text-label font-medium tabular-nums">{symbol(home)} 1 = {symbol(firstLocal)} {fmtRate(firstRate, firstLocal)}</span> · {srcText}
+                {locals.length > 1 && <> · +{locals.length - 1} more</>}
+              </>
+            ) : `Only ${currencyName(home)} on this trip`}
+          </span>
+          <span className="text-[15px] text-accent shrink-0">{firstLocal ? 'Change' : 'Add currency'}</span>
+        </button>
 
         {/* Categories */}
-        <section className="mt-6">
-          <h2 className="px-4 pb-1.5 text-[13px] uppercase tracking-wide text-tertiary">Categories</h2>
+        <section className="mt-4">
+          <h2 className="px-4 pb-1.5 text-[13px] uppercase tracking-wide text-tertiary">By category</h2>
           <div className="bg-card rounded-card overflow-hidden">
             {BUDGET_CATS.map((c, i) => {
               const M = BUDGET_META[c];
               const spent = b.byCat[c] || 0;
               const cap = trip.categoryBudgets?.[c] || 0;
               const over = cap > 0 && spent > cap;
-              const sp = conv(spent, disp);
-              const cp = conv(cap, disp);
+              const sp = inDisp(spent);
+              const cp = inDisp(cap);
               return (
                 <button key={c} onClick={() => setEditBudget(true)} className={cx('tap w-full text-left flex items-start gap-3 px-4 py-3', i < BUDGET_CATS.length - 1 && 'border-b hairline')}>
                   <span className="h-[30px] w-[30px] rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: M.color }}><M.icon size={17} strokeWidth={SW} color="#fff" /></span>
@@ -137,11 +137,11 @@ export default function Budget({ trip }) {
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="text-[17px]">{c}</span>
                       <span className={cx('text-[15px] tabular-nums', over ? 'text-warn font-semibold' : 'text-tertiary')}>
-                        {sp == null ? '—' : <Money amount={sp} code={disp} />}{cap > 0 && cp != null && <> / <Money amount={cp} code={disp} /></>}
+                        {sp == null ? '—' : <Money amount={sp} code={disp} />}{cap > 0 && cp != null && <> / <Money amount={cp} code={disp} whole /></>}
                       </span>
                     </div>
-                    {cap > 0 ? <ProgressBar pct={(spent / cap) * 100} tone={over ? 'warn' : spent / cap > 0.85 ? 'warn' : 'ok'} className="mt-2" /> : <div className="text-[13px] text-tertiary">No budget set</div>}
-                    {over && <div className="text-[13px] text-warn mt-1 flex items-center gap-1"><CircleAlert size={13} strokeWidth={2} /> Over budget by {money(conv(spent - cap, disp) ?? 0, disp, { short: true })}</div>}
+                    {cap > 0 ? <ProgressBar pct={(spent / cap) * 100} tone={over || spent / cap > 0.85 ? 'warn' : 'ok'} className="mt-2" /> : <div className="text-[13px] text-tertiary">No budget set</div>}
+                    {over && <div className="text-[13px] text-warn mt-1 flex items-center gap-1"><CircleAlert size={13} strokeWidth={2} /> Over budget by {money(inDisp(spent - cap) ?? 0, disp, { short: true })}</div>}
                   </div>
                 </button>
               );
@@ -151,7 +151,7 @@ export default function Budget({ trip }) {
 
         {/* Expenses */}
         <section className="mt-6">
-          <h2 className="px-4 pb-1.5 text-[13px] uppercase tracking-wide text-tertiary">Recent expenses</h2>
+          <h2 className="px-4 pb-1.5 text-[13px] uppercase tracking-wide text-tertiary">Recent</h2>
           {expenses.length === 0 ? (
             <Card><Empty icon={Receipt} text="No expenses yet. Tap + to log what you spend." /></Card>
           ) : (
@@ -159,18 +159,22 @@ export default function Budget({ trip }) {
               {shown.map((e, i) => {
                 const M = BUDGET_META[e.category] || BUDGET_META.Activities;
                 const h = expenseHome(e, settings);
-                const second = e.currency === home ? (locals[0] ? { amt: conv(h, locals[0]), code: locals[0] } : null) : { amt: h, code: home };
+                // Primary: selected currency (exact when paid in it). Secondary: the other currency.
+                const primary = e.currency === disp ? e.amount : disp === home ? h : conv(h, disp);
+                const sec = disp === home
+                  ? (e.currency !== home ? { amt: e.amount, code: e.currency } : locals[0] ? { amt: conv(h, locals[0]), code: locals[0] } : null)
+                  : { amt: h, code: home };
                 return (
                   <button key={e.id} onClick={() => setEditExp(e)} className="tap w-full text-left flex items-center gap-3 pl-4 min-h-[60px]">
                     <span className="h-9 w-9 rounded-full flex items-center justify-center shrink-0" style={{ background: M.color + '1F' }}><M.icon size={18} strokeWidth={SW} style={{ color: M.color }} /></span>
                     <div className={cx('flex-1 min-w-0 flex items-center gap-2 pr-4 py-2.5 self-stretch', i < shown.length - 1 && 'border-b hairline')}>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[17px] truncate flex items-center gap-1">{e.note || e.category}{e.receiptId && <Paperclip size={13} strokeWidth={SW} className="text-tertiary shrink-0" />}</div>
+                        <div className="text-[17px] truncate flex items-center gap-1">{e.note || e.category}{e.receiptId && <Paperclip size={13} strokeWidth={SW} className="text-tertiary shrink-0" aria-label="Has receipt" />}</div>
                         <div className="text-[13px] text-tertiary">{e.category} · {fmtDay(e.date)}</div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-[17px] font-semibold tabular-nums"><Money amount={e.amount} code={e.currency} /></div>
-                        {second?.amt != null && <div className="text-[13px] text-tertiary tabular-nums">≈ <Money amount={second.amt} code={second.code} /></div>}
+                        <div className="text-[17px] font-semibold tabular-nums">{primary == null ? '—' : <Money amount={primary} code={disp} />}</div>
+                        {sec?.amt != null && <div className="text-[13px] text-tertiary tabular-nums">≈ <Money amount={sec.amt} code={sec.code} /></div>}
                       </div>
                     </div>
                   </button>
@@ -186,24 +190,27 @@ export default function Budget({ trip }) {
       </div>
 
       <AddExpense trip={trip} open={adding || !!editExp} expense={editExp} onClose={() => { setAdding(false); setEditExp(null); }} />
-      <RateSheet trip={trip} code={rateCode} onClose={() => setRateCode(null)} />
+      <RateSheet trip={trip} open={rateOpen} onClose={() => setRateOpen(false)} />
       <BudgetSheet trip={trip} open={editBudget} onClose={() => setEditBudget(false)} />
-      <CurrencyPicker open={addCur} onClose={() => setAddCur(false)} exclude={[home, ...locals]} onPick={(c) => updateTrip(trip.id, (t) => { t.localCurrencies.push(c); t.rates[c] = t.rates[c] || { mode: 'live', manual: null, locked: null }; })} />
     </div>
   );
 }
 
-function RateSheet({ trip, code, onClose }) {
+function RateSheet({ trip, open, onClose }) {
   const { settings, updateTrip, refreshRates } = useStore();
   const home = settings.homeCurrency;
+  const locals = trip.localCurrencies;
+  const [code, setCode] = useState(locals[0] || null);
   const [mode, setMode] = useState('live');
   const [manual, setManual] = useState('');
   const [payHome, setPayHome] = useState('');
   const [payLocal, setPayLocal] = useState('');
   const [lockVal, setLockVal] = useState('');
-  const [picking, setPicking] = useState(false);
+  const [picking, setPicking] = useState(null); // 'add' | 'replace'
   const [refreshing, setRefreshing] = useState(false);
-  const live = settings.live?.base === home ? settings.live.rates?.[code] : null;
+  const live = code && settings.live?.base === home ? settings.live.rates?.[code] : null;
+
+  useEffect(() => { if (open) setCode((c) => (c && locals.includes(c) ? c : locals[0] || null)); }, [open, locals.join()]); // eslint-disable-line
 
   useEffect(() => {
     if (!code) return;
@@ -212,17 +219,17 @@ function RateSheet({ trip, code, onClose }) {
     setManual(cfg.manual ? String(cfg.manual) : '');
     setLockVal(String(cfg.locked || rateFor(trip, code, settings) || ''));
     setPayHome(''); setPayLocal('');
-  }, [code]); // eslint-disable-line
+  }, [code, open]); // eslint-disable-line
 
   useEffect(() => {
     const h = Number(payHome), l = Number(String(payLocal).replace(/,/g, ''));
     if (h > 0 && l > 0) setManual(String(Math.round((l / h) * 10000) / 10000));
   }, [payHome, payLocal]);
 
-  if (!code) return <Sheet open={false} onClose={onClose} />;
   const num = (s) => Number(String(s).replace(/,/g, ''));
 
   const save = () => {
+    if (!code) return onClose();
     const m = num(manual), lk = num(lockVal);
     if (mode === 'manual' && !(m > 0)) return toast('Enter your rate first');
     if (mode === 'locked' && !(lk > 0)) return toast('Enter a rate to lock');
@@ -232,17 +239,21 @@ function RateSheet({ trip, code, onClose }) {
     onClose();
   };
 
+  const addCurrency = (c) => {
+    updateTrip(trip.id, (t) => { if (!t.localCurrencies.includes(c)) t.localCurrencies.push(c); t.rates[c] = t.rates[c] || { mode: 'live', manual: null, locked: null }; });
+    setCode(c);
+  };
   const replaceCurrency = (c) => {
     updateTrip(trip.id, (t) => {
       t.localCurrencies = t.localCurrencies.map((x) => (x === code ? c : x)).filter((x, i, a) => a.indexOf(x) === i);
       t.rates[c] = t.rates[c] || { mode: 'live', manual: null, locked: null };
     });
-    onClose();
+    setCode(c);
   };
   const removeCurrency = () => {
     if (trip.expenses.some((e) => e.currency === code)) return toast(`Some expenses are in ${code}`);
     updateTrip(trip.id, (t) => { t.localCurrencies = t.localCurrencies.filter((x) => x !== code); });
-    onClose();
+    setCode(locals.find((x) => x !== code) || null);
   };
 
   const refresh = async () => {
@@ -253,54 +264,75 @@ function RateSheet({ trip, code, onClose }) {
   };
 
   return (
-    <Sheet open={!!code} onClose={onClose} title={`${symbol(code)} ${code} rate`} right={<TextButton bold onClick={save}>Save</TextButton>}>
-      <div className="mt-3">
-        <OptionList
-          value={mode}
-          onChange={setMode}
-          options={[
-            { value: 'live', label: 'Live rate', sub: live ? `${symbol(home)} 1 = ${symbol(code)} ${fmtRate(live, code)} · updated ${fmtDateTime(settings.live.time)}` : 'Not downloaded yet. Connect to the internet once.' },
-            { value: 'manual', label: 'My own rate', sub: 'From your money changer receipt' },
-            { value: 'locked', label: 'Lock for this trip', sub: 'Keep one fixed rate for the whole trip' },
-          ]}
-        />
-      </div>
-
-      {mode === 'live' && (
-        <button onClick={refresh} disabled={refreshing} className="press mt-3 w-full min-h-[48px] rounded-[14px] bg-card text-accent text-[15px] font-medium flex items-center justify-center gap-2">
-          <RefreshCw size={17} strokeWidth={SW} className={refreshing ? 'animate-spin' : ''} /> Refresh live rate
-        </button>
+    <Sheet open={open} onClose={onClose} title="Exchange rate" right={<TextButton bold onClick={save}>Save</TextButton>}>
+      {locals.length > 1 && (
+        <Segmented className="mt-3" value={code} onChange={setCode} options={locals.map((c) => ({ value: c, label: `${symbol(c)} ${c}` }))} />
       )}
 
-      {mode === 'manual' && (
+      {code ? (
         <>
-          <Group title="Your rate">
-            <Field label={`${symbol(home)} 1 =`} last>
-              <span className="text-tertiary mr-1">{symbol(code)}</span>
-              <input inputMode="decimal" className={inputCls} value={manual} onChange={(e) => setManual(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={live ? fmtRate(live, code) : '0'} />
-            </Field>
-          </Group>
-          <Group title="Or enter what you exchanged" footer="We work out the rate for you.">
-            <Field label={`Paid ${symbol(home)}`}><input inputMode="decimal" className={inputCls} value={payHome} onChange={(e) => setPayHome(e.target.value.replace(/[^\d.]/g, ''))} placeholder="e.g. 1000" /></Field>
-            <Field label={`Got ${symbol(code)}`} last><input inputMode="decimal" className={inputCls} value={payLocal} onChange={(e) => setPayLocal(e.target.value.replace(/[^\d.,]/g, ''))} placeholder="e.g. 312,000" /></Field>
-          </Group>
+          <div className="mt-3">
+            <OptionList
+              value={mode}
+              onChange={setMode}
+              options={[
+                { value: 'live', label: 'Live rate', sub: live ? `${symbol(home)} 1 = ${symbol(code)} ${fmtRate(live, code)} · updated ${fmtUpdated(settings.live.time)}` : 'Not downloaded yet. Connect to the internet once.' },
+                { value: 'manual', label: 'My own rate', sub: 'From your money changer receipt' },
+                { value: 'locked', label: 'Lock for this trip', sub: 'Keep one fixed rate for the whole trip' },
+              ]}
+            />
+          </div>
+
+          {mode === 'live' && (
+            <button onClick={refresh} disabled={refreshing} className="press mt-3 w-full min-h-[48px] rounded-[14px] bg-card text-accent text-[15px] font-medium flex items-center justify-center gap-2">
+              <RefreshCw size={17} strokeWidth={SW} className={refreshing ? 'animate-spin' : ''} /> Refresh live rate
+            </button>
+          )}
+
+          {mode === 'manual' && (
+            <>
+              <Group title="Your rate">
+                <Field label={`${symbol(home)} 1 =`} last>
+                  <span className="text-tertiary mr-1">{symbol(code)}</span>
+                  <input inputMode="decimal" className={inputCls} value={manual} onChange={(e) => setManual(e.target.value.replace(/[^\d.,]/g, ''))} placeholder={live ? fmtRate(live, code) : '0'} />
+                </Field>
+              </Group>
+              <Group title="Or enter what you exchanged" footer="We work out the rate for you.">
+                <Field label={`Paid ${symbol(home)}`}><input inputMode="decimal" className={inputCls} value={payHome} onChange={(e) => setPayHome(e.target.value.replace(/[^\d.]/g, ''))} placeholder="e.g. 1000" /></Field>
+                <Field label={`Got ${symbol(code)}`} last><input inputMode="decimal" className={inputCls} value={payLocal} onChange={(e) => setPayLocal(e.target.value.replace(/[^\d.,]/g, ''))} placeholder="e.g. 312,000" /></Field>
+              </Group>
+            </>
+          )}
+
+          {mode === 'locked' && (
+            <Group title="Locked rate" footer="All new expenses on this trip use this rate, even when online.">
+              <Field label={`${symbol(home)} 1 =`} last>
+                <span className="text-tertiary mr-1">{symbol(code)}</span>
+                <input inputMode="decimal" className={inputCls} value={lockVal} onChange={(e) => setLockVal(e.target.value.replace(/[^\d.,]/g, ''))} />
+              </Field>
+            </Group>
+          )}
         </>
+      ) : (
+        <p className="mt-4 px-1 text-[15px] text-tertiary">This trip only uses {currencyName(home)}. Add a currency if you will pay in another one.</p>
       )}
 
-      {mode === 'locked' && (
-        <Group title="Locked rate" footer="All new expenses on this trip use this rate, even when online.">
-          <Field label={`${symbol(home)} 1 =`} last>
-            <span className="text-tertiary mr-1">{symbol(code)}</span>
-            <input inputMode="decimal" className={inputCls} value={lockVal} onChange={(e) => setLockVal(e.target.value.replace(/[^\d.,]/g, ''))} />
-          </Field>
-        </Group>
-      )}
-
-      <Group title="Currency">
-        <button onClick={() => setPicking(true)} className="tap w-full text-left px-4 min-h-[52px] border-b hairline text-accent text-[17px]">Change currency ({currencyName(code)})</button>
-        <button onClick={removeCurrency} className="tap w-full text-left px-4 min-h-[52px] text-danger text-[17px] flex items-center gap-2"><Trash2 size={18} strokeWidth={SW} /> Remove from trip</button>
+      <Group title="Currencies">
+        {code && (
+          <>
+            <button onClick={() => setPicking('replace')} className="tap w-full text-left pl-4 min-h-[52px] text-accent text-[17px] flex items-center"><span className="flex-1 border-b hairline self-stretch flex items-center pr-4">Change {code} to another currency</span></button>
+            <button onClick={removeCurrency} className="tap w-full text-left pl-4 min-h-[52px] text-danger text-[17px] flex items-center gap-2"><span className="flex-1 border-b hairline self-stretch flex items-center gap-2 pr-4"><Trash2 size={18} strokeWidth={SW} /> Remove {code} from trip</span></button>
+          </>
+        )}
+        <button onClick={() => setPicking('add')} className="tap w-full text-left px-4 min-h-[52px] text-accent text-[17px] flex items-center gap-2"><Plus size={18} strokeWidth={SW} /> <span className="flex-1">Add currency</span><ChevronRight size={18} strokeWidth={2} className="text-tertiary/70" /></button>
       </Group>
-      <CurrencyPicker open={picking} onClose={() => setPicking(false)} value={code} exclude={[home]} onPick={replaceCurrency} />
+      <CurrencyPicker
+        open={!!picking}
+        onClose={() => setPicking(null)}
+        value={picking === 'replace' ? code : null}
+        exclude={[home, ...locals]}
+        onPick={(c) => (picking === 'add' ? addCurrency(c) : replaceCurrency(c))}
+      />
     </Sheet>
   );
 }
