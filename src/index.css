@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 242 242 247;
+  --card: 255 255 255;
+  --card2: 242 242 247;
+  --label: 0 0 0;
+  --secondary: 60 60 67;
+  --tertiary: 142 142 147;
+  --sep: 198 198 200;
+  --fill: 118 118 128;
+  --accent: 0 102 204;
+  --ok: 36 166 72;
+  --warn: 230 126 0;
+  --danger: 230 48 40;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: 0 0 0;
+  --card: 28 28 30;
+  --card2: 44 44 46;
+  --label: 255 255 255;
+  --secondary: 235 235 245;
+  --tertiary: 142 142 147;
+  --sep: 56 56 58;
+  --fill: 118 118 128;
+  --accent: 64 156 255;
+  --ok: 48 209 88;
+  --warn: 255 159 10;
+  --danger: 255 69 58;
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; }
+html, body { overflow-x: hidden; }
+#root { overflow-x: clip; }
+body {
+  @apply bg-bg text-label font-sans antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+button { -webkit-user-select: none; user-select: none; }
+input, textarea, select { font-size: 17px; }
+input[type="date"], input[type="time"] { -webkit-appearance: none; appearance: none; min-height: 44px; }
+
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pb-tabbar { padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
+.pb-page { padding-bottom: calc(env(safe-area-inset-bottom) + 32px); }
+
+.text-sec { color: rgb(var(--secondary) / 0.6); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+.hairline { border-color: rgb(var(--sep) / 0.6); }
+.blurbar {
+  background: rgb(var(--card) / 0.82);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.dark .blurbar { background: rgb(22 22 24 / 0.82); }
+
+.press { transition: transform 120ms ease, opacity 120ms ease; }
+.press:active { transform: scale(0.97); opacity: 0.85; }
+.tap:active { background: rgb(var(--fill) / 0.12); }
+
+/* Screen transitions */
+@keyframes push-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes pop-in { from { transform: translateX(-28%); opacity: .6; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheet-down { from { transform: translateY(0); } to { transform: translateY(100%); } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes tab-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-10px); } 40%,80% { transform: translateX(10px); } }
+
+.anim-push { animation: push-in 340ms cubic-bezier(.32,.72,0,1); }
+.anim-pop { animation: pop-in 300ms cubic-bezier(.32,.72,0,1); }
+.anim-fade { animation: fade-in 200ms ease; }
+.anim-tab { animation: tab-in 220ms ease; }
+.anim-shake { animation: shake 360ms ease; }
+.sheet-enter { animation: sheet-up 380ms cubic-bezier(.32,.72,0,1); }
+.sheet-exit { animation: sheet-down 260ms cubic-bezier(.4,0,1,1) forwards; }
+.backdrop-enter { animation: fade-in 300ms ease; }
+.backdrop-exit { animation: fade-out 260ms ease forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-push, .anim-pop, .anim-tab, .sheet-enter, .backdrop-enter { animation-duration: 1ms; }
+}
