@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, CheckCircle2, MessageCircle, PiggyBank } from 'lucide-react';
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, CheckCircle2, FileDown, MessageCircle, PiggyBank } from 'lucide-react';
 import { Avatar, Badge, Card, Empty, ProgressBar, Segmented, SW, cx, toast } from '../ui.jsx';
 import { useStore } from '../store.jsx';
 import { fundStats, fromSen, settleUp, YOU } from '../lib/model.js';
 import { money, symbol } from '../lib/currency.js';
 import { fmtDay } from '../lib/dates.js';
-import { fundText, shareText } from '../lib/share.js';
+import { deliverFile, fundPDF, fundText, shareText, slug } from '../lib/share.js';
 
 const SOFT = 'text-[#D1D1D6]';
 
@@ -13,6 +13,16 @@ export default function FundView({ trip, onEdit }) {
   const { settings, updateTrip } = useStore();
   const home = settings.homeCurrency;
   const [view, setView] = useState('cash');
+  const [busy, setBusy] = useState(false);
+  const downloadPdf = async () => {
+    setBusy(true);
+    try {
+      const blob = fundPDF(trip, { organiser: settings.organiser, home });
+      const r = await deliverFile(blob, `${slug(trip.name)}-group-fund.pdf`, `${trip.name} group fund`);
+      if (r === 'downloaded') toast('PDF saved');
+    } catch (e) { console.error(e); toast('Could not make the PDF'); }
+    setBusy(false);
+  };
   const f = trip.fund;
   const s = fundStats(trip);
   const m = (sen) => money(fromSen(sen), home);
@@ -146,12 +156,22 @@ export default function FundView({ trip, onEdit }) {
         </section>
       )}
 
-      <button
-        onClick={() => shareText(fundText(trip, home, settings.organiser), toast)}
-        className="press mt-5 w-full min-h-[48px] rounded-[14px] bg-card text-accent text-[15px] font-semibold flex items-center justify-center gap-2"
+      <div className="grid grid-cols-2 gap-2 mt-5">
+        <button
+          onClick={downloadPdf}
+          disabled={busy}
+          className="press min-h-[48px] rounded-[14px] bg-card text-accent text-[15px] font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+        >
+          <FileDown size={18} strokeWidth={SW} /> {busy ? 'Making PDF…' : 'Download PDF'}
+        </button>
+        <button
+          onClick={() => shareText(fundText(trip, home, settings.organiser), toast)}
+          className="press w-full min-h-[48px] rounded-[14px] bg-card text-accent text-[15px] font-semibold flex items-center justify-center gap-2"
       >
-        <MessageCircle size={18} strokeWidth={SW} /> Share summary to WhatsApp
-      </button>
+        <MessageCircle size={18} strokeWidth={SW} /> WhatsApp
+        </button>
+      </div>
+      <p className="px-4 pt-1.5 text-[13px] text-tertiary text-center">Shares the fund summary: balance, members and every entry. Your own spending is not included.</p>
       {!trip.domestic && <p className="px-4 pt-1.5 text-[13px] text-tertiary text-center">Totals in {symbol(home)}. Foreign payments keep the rate saved with each entry.</p>}
     </div>
   );

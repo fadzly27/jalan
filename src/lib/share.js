@@ -1,7 +1,8 @@
 // Shared output: itinerary PDF, WhatsApp text, calendar (.ics) and group-fund summary.
 // Shared copies show plans, times and places only. Expenses and documents are never included;
 // the group-fund summary is added only when the user chooses it.
-import { jsPDF } from 'jspdf';
+import { PDF, newDoc, pdfFooter, pdfHeader, pdfText } from './pdf.js';
+export { fundPDF } from './pdf.js';
 import { parse, addDays, fmtRange } from './dates.js';
 import { countryName, money } from './currency.js';
 import { dayCountry, driveLine, sortedPlans, whoLabel } from './logic.js';
@@ -211,54 +212,17 @@ export function itineraryICS(trip, dates, homeCountry = 'MY') {
 }
 
 // ---------- PDF ----------
-// Built-in PDF fonts only cover Western characters; swap common symbols and drop the rest.
-function pdfText(s) {
-  return String(s || '')
-    .replace(/→/g, '->').replace(/⇄|↔/g, '<->').replace(/←/g, '<-').replace(/·/g, '·')
-    .replace(/[^\x20-\x7E\u00A0-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D\u2022\u2026\u20AC]/g, '')
-    .replace(/\s{2,}/g, ' ').trim();
-}
-
-function hexToRgb(hex) {
-  const h = hex.replace('#', '');
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-}
-
 export function itineraryPDF(trip, dates, { organiser, includeFund = false, home = 'MYR' } = {}) {
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  const W = 210, H = 297, M = 15, CW = W - 2 * M;
-  const accent = hexToRgb('#A3195B');
-  const grey = [108, 108, 112];
-  const ink = [20, 20, 22];
-  let y = M;
-
-  // Header
-  let textX = M;
-  if (organiser?.logo) {
-    try {
-      const type = organiser.logo.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-      doc.addImage(organiser.logo, type, M, y, 18, 18);
-      textX = M + 23;
-    } catch { /* bad image: skip */ }
-  }
-  if (organiser?.name) {
-    doc.setFont('helvetica', 'bold').setFontSize(10).setTextColor(...accent);
-    doc.text(pdfText(organiser.name).toUpperCase(), textX, y + 4);
-    y += 6;
-  }
-  doc.setFont('helvetica', 'bold').setFontSize(20).setTextColor(...ink);
-  doc.text(pdfText(trip.name), textX, y + 7);
-  doc.setFont('helvetica', 'normal').setFontSize(10.5).setTextColor(...grey);
+  const doc = newDoc();
+  const { W, H, M, grey, ink } = PDF;
+  const CW = W - 2 * M;
+  const accent = PDF.accent;
   const countries = [...new Set(trip.destinations.map((d) => countryName(d.country)).filter(Boolean))].join(', ');
-  const sub = [pdfText(fmtRange(trip.start, trip.end)), pdfText(countries)].filter(Boolean).join('  ·  ');
-  doc.text(sub, textX, y + 13);
   const names = travellerNames(trip);
-  if (names.length) {
-    const tl = doc.splitTextToSize(pdfText(`Travellers: ${names.join(', ')}`), W - M - textX);
-    doc.text(tl, textX, y + 18.5);
-    y += 18.5 + (tl.length - 1) * 4.5;
-  } else y += 14;
-  y = Math.max(y + 6, organiser?.logo ? M + 24 : 0);
+  let y = pdfHeader(doc, trip, organiser, [
+    [fmtRange(trip.start, trip.end), countries].filter(Boolean).join('  ·  '),
+    names.length ? `Travellers: ${names.join(', ')}` : '',
+  ]);
 
   // Table columns: time | title | place | handled by
   const cols = [{ w: 22 }, { w: 62 }, { w: 58 }, { w: CW - 22 - 62 - 58 }];
@@ -323,16 +287,6 @@ export function itineraryPDF(trip, dates, { organiser, includeFund = false, home
     }
   }
 
-  // Footer on every page
-  const pages = doc.getNumberOfPages();
-  const contact = pdfText([organiser?.phone, organiser?.email].filter(Boolean).join('  ·  '));
-  for (let i = 1; i <= pages; i++) {
-    doc.setPage(i);
-    doc.setFont('helvetica', 'normal').setFontSize(8.5).setTextColor(...grey);
-    doc.setDrawColor(225, 225, 230).line(M, H - M - 5, W - M, H - M - 5);
-    if (contact) doc.text(contact, M, H - M);
-    doc.text(`Made with Jalan · ${today()}`, W / 2, H - M, { align: 'center' });
-    doc.text(`Page ${i} of ${pages}`, W - M, H - M, { align: 'right' });
-  }
+  pdfFooter(doc, organiser);
   return doc.output('blob');
 }

@@ -122,7 +122,9 @@ One person keeps the shared money and records it in **Budget → Group fund**. T
 
 **Cashflow** lists every entry with the balance after it. **Members** shows each person's **Paid** and **Share**, and whether they **Get back**, **Owe** or are **Settled**. People below the per-person amount show "still to pay" and appear in your reminders.
 
-At the end, **Settle up** lists the fewest transfers needed. Tap **Mark as settled** when done. **Share summary to WhatsApp** sends the balance, everyone's result and the last 5 entries.
+At the end, **Settle up** lists the fewest transfers needed. Tap **Mark as settled** when done.
+
+At the bottom, **Download PDF** makes an A4 fund report (summary, members, settle up and every entry), and **WhatsApp** sends a short summary with the last 5 entries.
 
 ## 11. Domestic trips
 
