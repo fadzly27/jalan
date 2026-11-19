@@ -55,6 +55,34 @@ export function makeSampleTrip(home = 'MYR') {
   const flightDocId = uid();
   plans[0].docId = flightDocId;
 
+  // Travellers and a group fund so the sharing and fund screens can be previewed.
+  const adam = uid(), siti = uid(), farah = uid();
+  const travellers = [
+    { id: 'you', name: 'You', color: '#C81E63' },
+    { id: adam, name: 'Adam', color: '#0E7490' },
+    { id: siti, name: 'Siti', color: '#7C3AED' },
+    { id: farah, name: 'Farah', color: '#B45309' },
+  ];
+  plans[0].who = 'you'; plans[0].whoNote = 'Booked by';
+  plans[13].who = adam; plans[13].whoNote = 'Buys tickets';
+  plans[11].who = siti; plans[11].whoNote = 'In charge';
+  const all = travellers.map((t) => t.id);
+  const krw = (n) => Math.round((n / rate) * 100);
+  let seq = 0;
+  const fe = (o) => ({ id: uid(), createdAt: Date.now() + seq++, note: '', ...o });
+  const fund = {
+    enabled: true, perPerson: 30000, members: [], settledAt: null,
+    entries: [
+      fe({ type: 'in', memberId: 'you', amount: 300, currency: home, rate: 1, sen: 30000, date: addDays(start, -20), method: 'transfer' }),
+      fe({ type: 'in', memberId: adam, amount: 300, currency: home, rate: 1, sen: 30000, date: addDays(start, -18), method: 'transfer' }),
+      fe({ type: 'in', memberId: siti, amount: 300, currency: home, rate: 1, sen: 30000, date: addDays(start, -15), method: 'cash' }),
+      fe({ type: 'in', memberId: farah, amount: 150, currency: home, rate: 1, sen: 15000, date: addDays(start, -12), method: 'cash' }),
+      fe({ type: 'out', title: 'T-money cards for everyone', category: 'Transport', amount: 80000, currency: 'KRW', rate, sen: krw(80000), date: start, splitBetween: all }),
+      fe({ type: 'out', title: 'Korean BBQ dinner', category: 'Food', amount: 180000, currency: 'KRW', rate, sen: krw(180000), date: addDays(start, 1), splitBetween: all }),
+      fe({ type: 'own', paidBy: adam, title: 'Taxi to Gamcheon', category: 'Transport', amount: 24000, currency: 'KRW', rate, sen: krw(24000), date: addDays(start, 6), splitBetween: all }),
+    ],
+  };
+
   const exp = (amount, currency, category, note, date) => ({
     id: uid(), amount, currency, rate: currency === home ? 1 : rate, home,
     homeAmount: currency === home ? amount : Math.round((amount / rate) * 100) / 100,
@@ -68,7 +96,7 @@ export function makeSampleTrip(home = 'MYR') {
     destinations: [{ country: 'KR', city: 'Seoul' }, { country: 'KR', city: 'Busan' }],
     start, end,
     cover: null,
-    color: '#3D5A80',
+    color: '#A3195B',
     budget: 8000,
     categoryBudgets: { Flights: 1800, Stay: 2600, Transport: 600, Food: 1500, Shopping: 900, Activities: 600 },
     localCurrencies: ['KRW'],
@@ -101,6 +129,9 @@ export function makeSampleTrip(home = 'MYR') {
       medical: 'No known allergies',
       embassy: { name: 'Embassy of Malaysia, Seoul', phone: '', address: 'Hannam-dong, Yongsan-gu, Seoul' },
     },
+    travellers,
+    fund,
+    domestic: false,
     journeyId: null,
     createdAt: Date.now(),
   };

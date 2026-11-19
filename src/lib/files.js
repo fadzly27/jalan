@@ -60,3 +60,14 @@ export function downloadBlob(blob, name) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
+
+// Resize an image to fit `max` px and return a data URL (PNG keeps logo transparency).
+export async function imageToDataURL(file, max = 256, type = 'image/png') {
+  const img = await loadImage(file);
+  const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.max(1, Math.round(img.naturalWidth * scale)), h = Math.max(1, Math.round(img.naturalHeight * scale));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  c.getContext('2d').drawImage(img, 0, 0, w, h);
+  return c.toDataURL(type);
+}

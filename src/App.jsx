@@ -14,7 +14,7 @@ function useTheme(appearance) {
     const apply = () => {
       const dark = appearance === 'dark' || (appearance === 'system' && mq.matches);
       document.documentElement.classList.toggle('dark', dark);
-      document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', dark ? '#000000' : '#F2F2F7'));
+      document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', dark ? '#000000' : '#C81E63'));
     };
     apply();
     mq.addEventListener?.('change', apply);

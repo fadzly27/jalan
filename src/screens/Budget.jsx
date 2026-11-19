@@ -5,7 +5,9 @@ import { OptionList, CurrencyPicker } from '../pickers.jsx';
 import { useStore } from '../store.jsx';
 import { BackButton } from './Trip.jsx';
 import AddExpense from './AddExpense.jsx';
-import { BUDGET_CATS, budgetStats, expenseHome, rateFor, rateSource } from '../lib/logic.js';
+import FundView from './FundView.jsx';
+import FundEntrySheet from './FundEntrySheet.jsx';
+import { budgetCats, budgetStats, expenseHome, localsOf, rateFor, rateSource, FUND_SHARE_CAT } from '../lib/logic.js';
 import { BUDGET_META } from '../meta.jsx';
 import { currencyName, fmtNumber, money, symbol } from '../lib/currency.js';
 import { fmtDateTime, fmtDay } from '../lib/dates.js';
@@ -29,8 +31,12 @@ const SOFT = 'text-[#D1D1D6]'; // secondary text inside the dark card (~80% whit
 export default function Budget({ trip }) {
   const { settings, updateTrip } = useStore();
   const home = settings.homeCurrency;
-  const locals = trip.localCurrencies;
+  const locals = localsOf(trip);
   const [disp, setDisp] = useState(home);
+  const [seg, setSeg] = useState('mine');
+  const [fundEntry, setFundEntry] = useState(null);
+  const fundOn = !!trip.fund?.enabled;
+  const view = fundOn ? seg : 'mine';
   const [adding, setAdding] = useState(false);
   const [editExp, setEditExp] = useState(null);
   const [rateOpen, setRateOpen] = useState(false);
@@ -61,11 +67,16 @@ export default function Budget({ trip }) {
   return (
     <div>
       <NavBar left={<BackButton />} title="Budget" right={
-        <button onClick={() => setAdding(true)} aria-label="Add expense" className="press h-11 w-11 flex items-center justify-center">
+        <button onClick={() => (view === 'fund' ? setFundEntry({}) : setAdding(true))} aria-label={view === 'fund' ? 'Add group fund entry' : 'Add expense'} className="press h-11 w-11 flex items-center justify-center">
           <span className="h-[30px] w-[30px] rounded-full bg-accent text-white flex items-center justify-center"><Plus size={20} strokeWidth={2.25} /></span>
         </button>
       } />
       <div className="px-4">
+        {fundOn && (
+          <Segmented className="mt-2" value={seg} onChange={setSeg} options={[{ value: 'mine', label: 'My spending' }, { value: 'fund', label: 'Group fund' }]} />
+        )}
+        {trip.domestic && <p className="px-1 pt-2 text-[13px] text-tertiary">Domestic trip · all amounts in {symbol(home)}</p>}
+        {view === 'fund' ? <FundView trip={trip} onEdit={(e) => setFundEntry({ entry: e })} /> : (<>
         {locals.length > 0 && (
           <Segmented
             className="mt-2"
@@ -92,7 +103,7 @@ export default function Budget({ trip }) {
               <Pencil size={18} strokeWidth={SW} />
             </button>
           </div>
-          <ProgressBar pct={b.total ? (b.spent / b.total) * 100 : 0} tone={b.left < 0 ? 'warn' : 'ok'} className="mt-3 !bg-white/20" />
+          <ProgressBar pct={b.total ? (b.spent / b.total) * 100 : 0} tone={b.left < 0 ? 'warn' : 'spent'} className="mt-3 !bg-white/20" />
           <div className="grid grid-cols-2 gap-3 mt-4">
             <div>
               <div className={cx('text-[13px] uppercase tracking-wide', b.left < 0 ? 'text-[#FFB340]' : SOFT)}>{b.left < 0 ? 'Over budget' : 'Left'}</div>
@@ -106,7 +117,7 @@ export default function Budget({ trip }) {
         </div>
 
         {/* Exchange rate line */}
-        <button onClick={() => setRateOpen(true)} className="press w-full min-h-[44px] mt-1 flex items-center gap-2 px-1 text-left">
+        {!trip.domestic && <button onClick={() => setRateOpen(true)} className="press w-full min-h-[44px] mt-1 flex items-center gap-2 px-1 text-left">
           <span className={cx('h-2 w-2 rounded-full shrink-0', firstLocal ? (rateOk ? 'bg-ok' : 'bg-warn') : 'bg-tertiary')} />
           <span className="flex-1 min-w-0 text-[13px] text-tertiary truncate">
             {firstLocal ? (
@@ -117,13 +128,13 @@ export default function Budget({ trip }) {
             ) : `Only ${currencyName(home)} on this trip`}
           </span>
           <span className="text-[15px] text-accent shrink-0">{firstLocal ? 'Change' : 'Add currency'}</span>
-        </button>
+        </button>}
 
         {/* Categories */}
         <section className="mt-4">
           <h2 className="px-4 pb-1.5 text-[13px] uppercase tracking-wide text-tertiary">By category</h2>
           <div className="bg-card rounded-card overflow-hidden">
-            {BUDGET_CATS.map((c, i) => {
+            {b.cats.map((c, i) => {
               const M = BUDGET_META[c];
               const spent = b.byCat[c] || 0;
               const cap = trip.categoryBudgets?.[c] || 0;
@@ -131,7 +142,7 @@ export default function Budget({ trip }) {
               const sp = inDisp(spent);
               const cp = inDisp(cap);
               return (
-                <button key={c} onClick={() => setEditBudget(true)} className={cx('tap w-full text-left flex items-start gap-3 px-4 py-3', i < BUDGET_CATS.length - 1 && 'border-b hairline')}>
+                <button key={c} onClick={() => setEditBudget(true)} className={cx('tap w-full text-left flex items-start gap-3 px-4 py-3', (i < b.cats.length - 1 || fundOn) && 'border-b hairline')}>
                   <span className="h-[30px] w-[30px] rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: M.color }}><M.icon size={17} strokeWidth={SW} color="#fff" /></span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-2">
@@ -146,6 +157,22 @@ export default function Budget({ trip }) {
                 </button>
               );
             })}
+            {fundOn && (() => {
+              const M = BUDGET_META[FUND_SHARE_CAT];
+              const sp = inDisp(b.fundShare);
+              return (
+                <button onClick={() => setSeg('fund')} className="tap w-full text-left flex items-center gap-3 px-4 py-3">
+                  <span className="h-[30px] w-[30px] rounded-[8px] flex items-center justify-center shrink-0" style={{ background: M.color }}><M.icon size={17} strokeWidth={SW} color="#fff" /></span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-[17px]">Group fund share <span className="text-[13px] text-tertiary">· auto</span></span>
+                      <span className="text-[15px] tabular-nums text-tertiary">{sp == null ? '—' : <Money amount={sp} code={disp} />}</span>
+                    </div>
+                    <div className="text-[13px] text-tertiary">Your part of shared costs, from the group fund</div>
+                  </div>
+                </button>
+              );
+            })()}
           </div>
         </section>
 
@@ -185,13 +212,15 @@ export default function Budget({ trip }) {
               )}
             </div>
           )}
-          {expenses.length > 0 && <p className="px-4 pt-1.5 text-[13px] text-tertiary">Each expense keeps the rate used when it was added. Tap to edit or delete.</p>}
+          {expenses.length > 0 && <p className="px-4 pt-1.5 text-[13px] text-tertiary">{trip.domestic ? 'Tap an expense to edit or delete it.' : 'Each expense keeps the rate used when it was added. Tap to edit or delete.'}</p>}
         </section>
+        </>)}
       </div>
 
       <AddExpense trip={trip} open={adding || !!editExp} expense={editExp} onClose={() => { setAdding(false); setEditExp(null); }} />
       <RateSheet trip={trip} open={rateOpen} onClose={() => setRateOpen(false)} />
       <BudgetSheet trip={trip} open={editBudget} onClose={() => setEditBudget(false)} />
+      {fundOn && <FundEntrySheet trip={trip} open={!!fundEntry} entry={fundEntry?.entry} onClose={() => setFundEntry(null)} />}
     </div>
   );
 }
@@ -340,20 +369,21 @@ function RateSheet({ trip, open, onClose }) {
 function BudgetSheet({ trip, open, onClose }) {
   const { settings, updateTrip } = useStore();
   const home = settings.homeCurrency;
+  const catList = budgetCats(trip);
   const [total, setTotal] = useState('');
   const [cats, setCats] = useState({});
   useEffect(() => {
     if (open) {
       setTotal(trip.budget ? String(trip.budget) : '');
-      setCats(Object.fromEntries(BUDGET_CATS.map((c) => [c, trip.categoryBudgets?.[c] ? String(trip.categoryBudgets[c]) : ''])));
+      setCats(Object.fromEntries(catList.map((c) => [c, trip.categoryBudgets?.[c] ? String(trip.categoryBudgets[c]) : ''])));
     }
   }, [open]); // eslint-disable-line
   const n = (s) => Number(String(s).replace(/,/g, '')) || 0;
-  const sum = BUDGET_CATS.reduce((a, c) => a + n(cats[c]), 0);
+  const sum = catList.reduce((a, c) => a + n(cats[c]), 0);
   const save = () => {
     updateTrip(trip.id, (t) => {
       t.budget = n(total);
-      t.categoryBudgets = Object.fromEntries(BUDGET_CATS.map((c) => [c, n(cats[c])]));
+      t.categoryBudgets = Object.fromEntries(catList.map((c) => [c, n(cats[c])]));
     });
     onClose();
   };
@@ -363,8 +393,8 @@ function BudgetSheet({ trip, open, onClose }) {
         <Field label="Total" last><span className="text-tertiary mr-1">{symbol(home)}</span><input inputMode="decimal" className={inputCls} value={total} onChange={(e) => setTotal(e.target.value.replace(/[^\d.]/g, ''))} placeholder="0" /></Field>
       </Group>
       <Group title="Per category" footer={`Categories add up to ${money(sum, home)}${n(total) ? ` of ${money(n(total), home)}` : ''}.`}>
-        {BUDGET_CATS.map((c, i) => (
-          <Field key={c} label={c} last={i === BUDGET_CATS.length - 1}>
+        {catList.map((c, i) => (
+          <Field key={c} label={c} last={i === catList.length - 1}>
             <span className="text-tertiary mr-1">{symbol(home)}</span>
             <input inputMode="decimal" className={inputCls} value={cats[c] || ''} onChange={(e) => setCats({ ...cats, [c]: e.target.value.replace(/[^\d.]/g, '') })} placeholder="0" />
           </Field>

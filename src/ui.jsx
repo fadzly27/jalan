@@ -124,7 +124,7 @@ export function ProgressRing({ pct, size = 64, stroke = 7, tone, track = 'rgb(va
 }
 
 export function ProgressBar({ pct, tone = 'accent', className }) {
-  const bg = { accent: 'bg-accent', ok: 'bg-ok', warn: 'bg-warn' }[tone];
+  const bg = { accent: 'bg-accent', ok: 'bg-ok', warn: 'bg-warn', spent: 'bg-spent' }[tone];
   return (
     <div className={cx('h-[6px] rounded-full bg-fill/[0.16] overflow-hidden', className)}>
       <div className={cx('h-full rounded-full transition-[width] duration-500', bg)} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
@@ -134,7 +134,7 @@ export function ProgressBar({ pct, tone = 'accent', className }) {
 
 export function Badge({ tone = 'accent', solid, children, className }) {
   const map = {
-    accent: solid ? 'bg-accent text-white' : 'bg-accent/[0.12] text-accent',
+    accent: solid ? 'bg-accent text-white' : 'bg-accent-soft text-accent-ink',
     ok: solid ? 'bg-ok-ink text-white' : 'bg-ok/[0.14] text-ok',
     warn: solid ? 'bg-warn-ink text-white' : 'bg-warn/[0.15] text-warn',
     grey: 'bg-fill/[0.14] text-tertiary',
@@ -352,5 +352,55 @@ export function CloseButton({ onClick }) {
     <button onClick={onClick} aria-label="Dismiss" className="press h-11 w-11 -m-2 flex items-center justify-center text-tertiary shrink-0">
       <X size={18} strokeWidth={2} />
     </button>
+  );
+}
+
+// iOS-style switch: green when on. 51x31 visual, 44px+ tap area.
+export function Toggle({ checked, onChange, label }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className="shrink-0 h-11 w-[60px] flex items-center justify-end"
+    >
+      <span className={cx('relative h-[31px] w-[51px] rounded-full transition-colors duration-200', checked ? 'bg-ok' : 'bg-fill/30')}>
+        <span
+          className="absolute top-[2px] left-[2px] h-[27px] w-[27px] rounded-full bg-white shadow-[0_3px_8px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.16)] transition-transform duration-200"
+          style={{ transform: checked ? 'translateX(20px)' : 'none' }}
+        />
+      </span>
+    </button>
+  );
+}
+
+export function Avatar({ name, color, size = 32, ring }) {
+  const parts = (name || '?').trim().split(/\s+/).filter(Boolean);
+  const text = parts.length ? (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() : '?';
+  return (
+    <span
+      className={cx('inline-flex items-center justify-center rounded-full text-white font-semibold shrink-0', ring && 'ring-2 ring-card')}
+      style={{ width: size, height: size, background: color || '#8E8E93', fontSize: Math.round(size * 0.38) }}
+      aria-hidden="true"
+    >
+      {text}
+    </span>
+  );
+}
+
+export function AvatarStack({ people, max = 5, size = 32 }) {
+  const shown = people.slice(0, max);
+  const more = people.length - shown.length;
+  return (
+    <span className="flex items-center">
+      {shown.map((p, i) => (
+        <span key={p.id} style={{ marginLeft: i ? -size * 0.3 : 0 }}><Avatar name={p.name} color={p.color} size={size} ring /></span>
+      ))}
+      {more > 0 && (
+        <span className="inline-flex items-center justify-center rounded-full bg-fill/20 text-[12px] font-semibold ring-2 ring-card" style={{ width: size, height: size, marginLeft: -size * 0.3 }}>+{more}</span>
+      )}
+    </span>
   );
 }

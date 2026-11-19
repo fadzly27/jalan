@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { db, uid } from './lib/db.js';
 import { makeSampleTrip } from './lib/sample.js';
+import { normalizeTrip } from './lib/model.js';
 import { dataURLToBlob, readAsDataURL, downloadBlob } from './lib/files.js';
 
 const DEFAULT_SETTINGS = {
@@ -13,6 +14,8 @@ const DEFAULT_SETTINGS = {
   templates: [],
   live: null,
   sampleCleared: false,
+  homeCountry: null,
+  organiser: { name: '', logo: null, phone: '', email: '' },
 };
 
 const Ctx = createContext(null);
@@ -30,7 +33,8 @@ export function StoreProvider({ children }) {
 
   useEffect(() => {
     (async () => {
-      let s = { ...DEFAULT_SETTINGS, ...((await db.get('settings')) || {}) };
+      const saved = (await db.get('settings')) || {};
+      let s = { ...DEFAULT_SETTINGS, ...saved, organiser: { ...DEFAULT_SETTINGS.organiser, ...(saved.organiser || {}) } };
       let t = await db.allTrips();
       const seeded = await db.get('seeded');
       if (!seeded && t.length === 0) {
@@ -39,7 +43,7 @@ export function StoreProvider({ children }) {
         await db.set('seeded', true);
         t = [sample];
       }
-      setTrips(t);
+      setTrips(t.map((x) => normalizeTrip(x, s)));
       setSettingsState(s);
       setReady(true);
     })();
@@ -53,7 +57,8 @@ export function StoreProvider({ children }) {
     });
   }, []);
 
-  const addTrip = useCallback(async (trip) => {
+  const addTrip = useCallback(async (raw) => {
+    const trip = normalizeTrip(raw, settingsRef.current);
     await db.putTrip(trip);
     setTrips((t) => [...t, trip]);
   }, []);
@@ -157,7 +162,7 @@ export function StoreProvider({ children }) {
       if (b) files[k] = await readAsDataURL(b);
     }
     const s = { ...settingsRef.current, lastBackup: Date.now() };
-    const data = { app: 'jalan', version: 1, exportedAt: new Date().toISOString(), settings: s, trips: tripsRef.current, files };
+    const data = { app: 'jalan', version: 2, exportedAt: new Date().toISOString(), settings: s, trips: tripsRef.current, files };
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const name = `jalan-backup-${new Date().toISOString().slice(0, 10)}.json`;
     const file = new File([blob], name, { type: 'application/json' });
@@ -177,11 +182,12 @@ export function StoreProvider({ children }) {
     await db.clearTrips();
     await db.clearFiles();
     for (const [k, url] of Object.entries(data.files || {})) await db.putFile(k, await dataURLToBlob(url));
-    for (const t of data.trips) await db.putTrip(t);
+    const s = { ...DEFAULT_SETTINGS, ...data.settings, organiser: { ...DEFAULT_SETTINGS.organiser, ...(data.settings?.organiser || {}) } };
+    const trips = data.trips.map((t) => normalizeTrip(t, s));
+    for (const t of trips) await db.putTrip(t);
     await db.set('seeded', true);
-    const s = { ...DEFAULT_SETTINGS, ...data.settings };
     await db.set('settings', s);
-    setTrips(data.trips);
+    setTrips(trips);
     setSettingsState(s);
     setUnlocked(false);
   }, []);

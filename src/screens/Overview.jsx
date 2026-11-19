@@ -6,7 +6,8 @@ import { BackButton } from './Trip.jsx';
 import TripForm from './TripForm.jsx';
 import { useNav } from '../App.jsx';
 import { fmtDay, fmtRange, fmtWeekday, nights, tripDays, tripStatus } from '../lib/dates.js';
-import { budgetStats, docWarnings, nextPlan, readiness, relevantTip, TODO_SUGGESTIONS } from '../lib/logic.js';
+import { budgetStats, docWarnings, driveLine, nextPlan, readiness, relevantTip, todoSuggestions, whoLabel } from '../lib/logic.js';
+import { DomesticBadge } from './Home.jsx';
 import { PLAN_META } from '../meta.jsx';
 import { money, fmtNumber, countryName } from '../lib/currency.js';
 import { uid } from '../lib/db.js';
@@ -15,12 +16,12 @@ function TripHero({ trip, r }) {
   const st = tripStatus(trip);
   const cities = trip.destinations.map((d) => d.city || countryName(d.country)).filter(Boolean);
   return (
-    <div className="relative mt-2 rounded-card overflow-hidden text-white" style={{ background: trip.color || '#0066CC' }}>
+    <div className="relative mt-2 rounded-card overflow-hidden text-white" style={{ background: trip.color || 'var(--hero)' }}>
       {trip.cover && <img src={trip.cover} alt="" className="absolute inset-0 h-full w-full object-cover" />}
       {trip.cover && <div className="absolute inset-0 bg-black/50" />}
       <div className="relative p-4">
-        <div className="text-[13px] font-semibold uppercase tracking-wide truncate">{cities.join(' · ')}</div>
-        <div className="text-[15px]">{fmtRange(trip.start, trip.end)} · {nights(trip)} nights</div>
+        <div className="flex items-center gap-2 min-w-0"><span className="text-[13px] font-semibold uppercase tracking-wide truncate text-hero-sub">{cities.join(' · ')}</span>{trip.domestic && <DomesticBadge />}</div>
+        <div className="text-[15px] text-hero-sub">{fmtRange(trip.start, trip.end)} · {nights(trip)} nights</div>
         <div className="flex items-end justify-between gap-3 mt-7">
           <div className="min-w-0">
             {st.phase === 'upcoming' && (
@@ -45,7 +46,7 @@ function TripHero({ trip, r }) {
           <div className="flex items-center gap-2.5 shrink-0">
             <div className="text-right">
               <div className="text-[13px] font-semibold uppercase tracking-wide">Trip ready</div>
-              <div className="text-[13px]">Packing, docs, to-dos</div>
+              <div className="text-[13px] text-hero-sub">Packing, docs, to-dos</div>
             </div>
             <div className="relative">
               <ProgressRing pct={r.pct} size={64} stroke={7} tone="#fff" track="rgba(255,255,255,0.28)" />
@@ -106,7 +107,7 @@ function TodoSheet({ trip, open, onClose }) {
     setText('');
   };
   const mut = (id, fn) => updateTrip(trip.id, (x) => { const y = x.todos.find((z) => z.id === id); if (y) fn(y); });
-  const suggestions = TODO_SUGGESTIONS.filter((s) => !trip.todos.some((t) => t.text.toLowerCase() === s.toLowerCase()));
+  const suggestions = todoSuggestions(trip).filter((s) => !trip.todos.some((t) => t.text.toLowerCase() === s.toLowerCase()));
   const list = [...trip.todos.filter((t) => !t.done), ...trip.todos.filter((t) => t.done)];
 
   return (
@@ -180,7 +181,7 @@ export default function Overview({ trip, go }) {
               <div className="flex-1 min-w-0">
                 <div className="text-[12px] font-semibold uppercase tracking-wide text-tertiary">Next up</div>
                 <div className="text-[17px] font-semibold truncate">{next.title}</div>
-                <div className="text-[13px] text-tertiary truncate">{fmtWeekday(next.date)} {fmtDay(next.date)}{next.time ? ` · ${next.time}` : ''}{next.place ? ` · ${next.place}` : ''}</div>
+                <div className="text-[13px] text-tertiary truncate">{fmtWeekday(next.date)} {fmtDay(next.date)}{next.time ? ` · ${next.time}` : ''}{next.category === 'drive' && driveLine(next) ? ` · ${driveLine(next)}` : next.place ? ` · ${next.place}` : ''}{whoLabel(trip, next) ? ` · ${whoLabel(trip, next)}` : ''}</div>
                 {tip && <div className="text-[13px] text-accent mt-0.5 flex items-center gap-1"><Lightbulb size={13} strokeWidth={SW} className="shrink-0" /><span className="truncate">{tip}</span></div>}
               </div>
               <ChevronRight size={18} strokeWidth={2} className="text-tertiary/70 shrink-0" />
@@ -189,13 +190,13 @@ export default function Overview({ trip, go }) {
         })()}
 
         <div className="grid grid-cols-2 gap-3 mt-3">
-          <Tile icon={CalendarDays} color="#0066CC" label="Itinerary" value={`${tripDays(trip).length} days · ${trip.plans.length} plans`} onClick={() => go('itinerary')} />
+          <Tile icon={CalendarDays} color="rgb(var(--accent))" label="Itinerary" value={`${tripDays(trip).length} days · ${trip.plans.length} plans`} onClick={() => go('itinerary')} />
           <Tile icon={Luggage} color="#5856D6" label="Packing" value={`${r.packed} of ${r.packTotal} packed`} onClick={() => go('packing')} />
           <Tile
             icon={FileText}
             color={warnings.length ? 'rgb(var(--warn-ink))' : 'rgb(var(--ok-ink))'}
             label="Documents"
-            value={<span className={warnings.length ? 'text-warn font-medium' : 'text-ok font-medium'}>{warnings.length ? `${warnings.length} warning${warnings.length > 1 ? 's' : ''}` : 'All saved'}</span>}
+            value={<span className={warnings.length ? 'text-warn font-medium' : 'text-ok font-medium'}>{warnings.length ? `${warnings.length} warning${warnings.length > 1 ? 's' : ''}` : 'All good'}</span>}
             onClick={() => go('docs')}
           />
           <Tile

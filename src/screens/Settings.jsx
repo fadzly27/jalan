@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
-import { ChevronLeft, Coins, Download, Lock, Moon, Upload, Trash2, Sparkles, Info, CircleAlert, BookOpen } from 'lucide-react';
-import { Group, Header, Row, Segmented, Sheet, TextButton, SW, toast } from '../ui.jsx';
+import { ChevronLeft, Coins, Download, Lock, Moon, Upload, Trash2, Sparkles, Info, CircleAlert, BookOpen, ImagePlus } from 'lucide-react';
+import { Field, Group, Header, Row, Segmented, Sheet, TextButton, SW, inputCls, toast } from '../ui.jsx';
+import { imageToDataURL } from '../lib/files.js';
 import { CurrencyPicker } from '../pickers.jsx';
 import { useStore } from '../store.jsx';
 import { useNav } from '../App.jsx';
@@ -15,6 +16,15 @@ export default function Settings() {
   const [pinMode, setPinMode] = useState(null); // 'set' | 'verify-remove' | 'verify-change'
   const [busy, setBusy] = useState(false);
   const fileRef = useRef(null);
+  const logoRef = useRef(null);
+  const org = settings.organiser || { name: '', logo: null, phone: '', email: '' };
+  const setOrg = (patch) => setSettings((s) => ({ ...s, organiser: { ...(s.organiser || {}), ...patch } }));
+  const onLogo = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try { setOrg({ logo: await imageToDataURL(file, 256) }); toast('Logo saved'); } catch { toast('Could not read that image'); }
+  };
   const hasSample = trips.some((t) => t.sample);
   const last = settings.lastBackup;
   const stale = !last || Date.now() - last > 30 * 86400000;
@@ -55,14 +65,34 @@ export default function Settings() {
           </div>
         </Group>
 
+        <Group title="Organiser profile" footer="Optional. Shown on shared PDFs and at the end of WhatsApp messages. Stays on this device.">
+          <Field label="Name"><input className={inputCls} value={org.name} onChange={(e) => setOrg({ name: e.target.value })} placeholder="You or your business" /></Field>
+          <Field label="Phone"><input type="tel" className={inputCls} value={org.phone} onChange={(e) => setOrg({ phone: e.target.value })} placeholder="+60 12-345 6789" /></Field>
+          <Field label="Email"><input type="email" inputMode="email" autoCapitalize="none" className={inputCls} value={org.email} onChange={(e) => setOrg({ email: e.target.value })} placeholder="name@example.com" /></Field>
+          <div className="flex items-center gap-3 pl-4 pr-2 min-h-[60px]">
+            <span className="text-[17px] w-[108px] shrink-0">Logo</span>
+            {org.logo ? (
+              <>
+                <img src={org.logo} alt="Organiser logo" className="h-10 w-10 rounded-[8px] object-contain bg-white border border-sep/60" />
+                <span className="flex-1" />
+                <button onClick={() => logoRef.current?.click()} className="press min-h-[44px] px-2 text-accent text-[15px]">Change</button>
+                <button onClick={() => setOrg({ logo: null })} className="press min-h-[44px] px-2 text-danger text-[15px]">Remove</button>
+              </>
+            ) : (
+              <button onClick={() => logoRef.current?.click()} className="press flex-1 min-h-[44px] flex items-center gap-1.5 text-accent text-[15px]"><ImagePlus size={18} strokeWidth={SW} /> Add logo</button>
+            )}
+            <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={onLogo} />
+          </div>
+        </Group>
+
         <Group title="Privacy" footer="The PIN locks the Documents tab on this device.">
           {settings.pinHash ? (
             <>
-              <Row icon={Lock} iconColor="#0066CC" title="Change PIN" onClick={() => setPinMode('verify-change')} />
+              <Row icon={Lock} iconColor="rgb(var(--accent))" title="Change PIN" onClick={() => setPinMode('verify-change')} />
               <Row icon={Lock} iconColor="rgb(var(--danger))" title="Turn off PIN" tone="danger" onClick={() => setPinMode('verify-remove')} chevron={false} last />
             </>
           ) : (
-            <Row icon={Lock} iconColor="#0066CC" title="Set PIN for Documents" onClick={() => setPinMode('set')} last />
+            <Row icon={Lock} iconColor="rgb(var(--accent))" title="Set PIN for Documents" onClick={() => setPinMode('set')} last />
           )}
         </Group>
 
@@ -70,7 +100,7 @@ export default function Settings() {
           title="Backup"
           footer={<span className={stale ? 'text-warn' : ''}>{last ? `Last backup ${fmtDateTime(last)}.` : 'No backup yet.'} {stale ? 'Back up at least once a month.' : ''} The file includes trips, plans, packing, expenses and documents.</span>}
         >
-          <Row icon={Download} iconColor="#0066CC" title={busy ? 'Exporting…' : 'Export all data'} onClick={busy ? undefined : doExport} right={stale ? <CircleAlert size={18} strokeWidth={SW} className="text-warn" /> : null} />
+          <Row icon={Download} iconColor="rgb(var(--accent))" title={busy ? 'Exporting…' : 'Export all data'} onClick={busy ? undefined : doExport} right={stale ? <CircleAlert size={18} strokeWidth={SW} className="text-warn" /> : null} />
           <Row icon={Upload} iconColor="#8E8E93" title="Import backup" onClick={() => fileRef.current?.click()} last />
           <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={doImport} />
         </Group>
@@ -84,7 +114,7 @@ export default function Settings() {
         </Group>
 
         <Group title="About" footer="Jalan keeps everything on this device. No account, no server.">
-          <Row icon={BookOpen} iconColor="#0066CC" title="How to use Jalan" onClick={() => { window.location.href = './guide.html'; }} />
+          <Row icon={BookOpen} iconColor="rgb(var(--accent))" title="How to use Jalan" onClick={() => { window.location.href = './guide.html'; }} />
           <Row icon={Info} iconColor="#8E8E93" title="Jalan" value="1.0" last />
         </Group>
       </div>

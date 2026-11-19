@@ -39,7 +39,7 @@ export default function PinPad({ mode = 'verify', hash, onSuccess, title }) {
   const heading = title || (mode === 'verify' ? 'Enter PIN' : first ? 'Confirm new PIN' : 'Choose a 4-digit PIN');
   return (
     <div className="flex flex-col items-center px-6 pt-6">
-      <span className="h-12 w-12 rounded-full flex items-center justify-center text-accent" style={{ background: 'rgb(var(--accent) / 0.12)' }}>
+      <span className="h-12 w-12 rounded-full flex items-center justify-center text-accent" style={{ background: 'var(--accent-soft)' }}>
         <Lock size={22} strokeWidth={SW} />
       </span>
       <div className="text-[20px] font-semibold mt-3">{heading}</div>

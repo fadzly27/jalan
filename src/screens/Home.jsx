@@ -10,7 +10,7 @@ import TripForm from './TripForm.jsx';
 
 export function Hero({ trip, height = 'h-40', children }) {
   return (
-    <div className={cx('relative overflow-hidden', height)} style={{ background: trip.color || '#0066CC' }}>
+    <div className={cx('relative overflow-hidden', height)} style={{ background: trip.color || 'var(--hero)' }}>
       {trip.cover && <img src={trip.cover} alt="" className="absolute inset-0 h-full w-full object-cover" />}
       {trip.cover && <div className="absolute inset-0 bg-black/45" />}
       <div className="relative h-full flex flex-col justify-end p-4 text-white">{children}</div>
@@ -28,7 +28,7 @@ export function Reminders({ reminders, onOpen }) {
         <div key={r.id} className="anim-fade bg-card rounded-card flex items-start gap-3 p-3.5 pr-4">
           <span
             className={cx('h-8 w-8 rounded-full flex items-center justify-center shrink-0', r.tone === 'warn' ? 'text-warn' : 'text-accent')}
-            style={{ background: r.tone === 'warn' ? 'rgb(var(--warn) / 0.15)' : 'rgb(var(--accent) / 0.12)' }}
+            style={{ background: r.tone === 'warn' ? 'rgb(var(--warn) / 0.15)' : 'var(--accent-soft)' }}
           >
             {r.tone === 'warn' ? <CircleAlert size={18} strokeWidth={SW} /> : <Bell size={18} strokeWidth={SW} />}
           </span>
@@ -185,9 +185,12 @@ function FeaturedCard({ journey, settings, onOpen, onLink }) {
       aria-label={`Open ${title}`}
     >
       <Hero trip={first} height="h-[150px]">
-        <div className="text-[13px] font-semibold uppercase tracking-wide">{overline}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] font-semibold uppercase tracking-wide text-hero-sub">{overline}</span>
+          {journey.every((t) => t.domestic) && <DomesticBadge />}
+        </div>
         <div className="text-[26px] font-bold leading-tight line-clamp-2">{title}</div>
-        <div className="text-[15px]">{fmtRange(start, end)} · {diffDays(end, start)} nights</div>
+        <div className="text-[15px] text-hero-sub">{fmtRange(start, end)} · {diffDays(end, start)} nights</div>
       </Hero>
       <div className="p-4">
         <div className="flex items-baseline gap-2">
@@ -219,4 +222,8 @@ function FeaturedCard({ journey, settings, onOpen, onLink }) {
       </div>
     </div>
   );
+}
+
+export function DomesticBadge() {
+  return <span className="inline-flex items-center rounded-full bg-white/20 px-2 py-[2px] text-[11px] font-bold tracking-wider text-white">DOMESTIC</span>;
 }

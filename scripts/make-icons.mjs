@@ -2,7 +2,7 @@
 import { deflateSync, crc32 } from 'node:zlib';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
-const BLUE = [0, 102, 204];
+const BLUE = [200, 30, 99]; // theme accent #C81E63
 
 function inPin(x, y, s, scale) {
   // coordinates in a 512 design grid, glyph scaled around the centre

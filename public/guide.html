@@ -5,21 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Jalan Guide</title>
 <meta name="description" content="How to use Jalan, step by step: install, add a trip, plan, pack, save documents and track spending.">
-<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#C81E63" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <style>
   :root {
     --bg: #F2F2F7; --card: #FFFFFF; --label: #000000; --sec: #6C6C70; --sep: rgba(60,60,67,.18);
-    --accent: #0066CC; --accent-soft: rgba(0,102,204,.1); --ok: #1E7B34; --ok-soft: rgba(36,166,72,.13);
+    --accent: #C81E63; --accent-soft: #FDEBF2; --ok: #1E7B34; --ok-soft: rgba(36,166,72,.13);
     --warn: #B35600; --warn-soft: rgba(230,126,0,.13); --chip: #FFFFFF; --ui: #E9E9EE;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #000000; --card: #1C1C1E; --label: #FFFFFF; --sec: #98989F; --sep: rgba(84,84,88,.6);
-      --accent: #409CFF; --accent-soft: rgba(64,156,255,.16); --ok: #30D158; --ok-soft: rgba(48,209,88,.16);
+      --accent: #FF5C93; --accent-soft: rgba(255,92,147,.16); --ok: #30D158; --ok-soft: rgba(48,209,88,.16);
       --warn: #FF9F0A; --warn-soft: rgba(255,159,10,.16); --chip: #1C1C1E; --ui: #2C2C2E;
       color-scheme: dark;
     }
@@ -37,7 +37,7 @@
 
   /* Header */
   .hero { text-align: center; }
-  .hero img { width: 88px; height: 88px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,102,204,.28); }
+  .hero img { width: 88px; height: 88px; border-radius: 20px; box-shadow: 0 8px 24px rgba(200,30,99,.28); }
   h1 { font-size: 34px; line-height: 1.15; margin: 16px 0 6px; letter-spacing: -.01em; }
   .lead { color: var(--sec); margin: 0 auto; max-width: 30em; }
   .open {
@@ -219,7 +219,7 @@
     <div class="sh"><span class="num">4</span><h2>Inside your trip: 5 tabs</h2></div>
     <p class="goal">Tap a trip to open it. The tabs are at the bottom of the screen. <span class="ui"><i data-i="back"></i>Trips</span> at the top takes you back.</p>
     <div class="tiles">
-      <a class="tile" href="#trips"><span class="ic" style="background:#0066CC"><i data-i="grid"></i></span><b>Overview</b><span>Countdown, next plan, to-dos</span></a>
+      <a class="tile" href="#trips"><span class="ic" style="background:#C81E63"><i data-i="grid"></i></span><b>Overview</b><span>Countdown, next plan, to-dos</span></a>
       <a class="tile" href="#itinerary"><span class="ic" style="background:#5856D6"><i data-i="calendar"></i></span><b>Itinerary</b><span>Your plans, day by day</span></a>
       <a class="tile" href="#packing"><span class="ic" style="background:#AF52DE"><i data-i="luggage"></i></span><b>Packing</b><span>What to bring</span></a>
       <a class="tile" href="#docs"><span class="ic" style="background:#B35600"><i data-i="file"></i></span><b>Docs</b><span>Passport, tickets, bookings</span></a>

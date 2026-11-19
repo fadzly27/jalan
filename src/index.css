@@ -11,7 +11,14 @@
   --tertiary: 108 108 112;
   --sep: 198 198 200;
   --fill: 118 118 128;
-  --accent: 0 102 204;
+  /* Pink theme — every accent colour is defined here */
+  --accent: 200 30 99;          /* #C81E63 */
+  --accent-press: 157 23 77;    /* #9D174D */
+  --accent-ink: 157 23 77;      /* text/icons on soft accent */
+  --accent-soft: #FDEBF2;
+  --hero: #A3195B;
+  --hero-sub: #FCE4EE;
+  --spent-bar: #F472B6;
   --ok: 36 166 72;
   --warn: 230 126 0;
   --danger: 200 40 32;
@@ -30,7 +37,10 @@
   --tertiary: 152 152 159;
   --sep: 56 56 58;
   --fill: 118 118 128;
-  --accent: 64 156 255;
+  --accent: 255 92 147;         /* #FF5C93 */
+  --accent-press: 230 70 125;
+  --accent-ink: 255 92 147;
+  --accent-soft: rgba(255, 92, 147, 0.16);
   --ok: 48 209 88;
   --warn: 255 159 10;
   --danger: 255 69 58;
@@ -38,6 +48,14 @@
   --warn-ink: 255 159 10;
   color-scheme: dark;
 }
+
+/* Accent helpers */
+.bg-accent-soft { background-color: var(--accent-soft); }
+.text-accent-ink { color: rgb(var(--accent-ink)); }
+.bg-accent:active { background-color: rgb(var(--accent-press)); }
+.bg-hero { background-color: var(--hero); }
+.text-hero-sub { color: var(--hero-sub); }
+.bg-spent { background-color: var(--spent-bar); }
 
 /* Status colours used as text use the high-contrast "ink" shade. */
 .text-ok { color: rgb(var(--ok-ink)); }

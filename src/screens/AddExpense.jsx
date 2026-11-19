@@ -1,26 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Camera, Eye, MinusCircle, Trash2 } from 'lucide-react';
-import { Chip, Field, Group, Keypad, PrimaryButton, Segmented, Sheet, SW, TextButton, inputCls, toast, cx } from '../ui.jsx';
+import { Chip, Field, Group, PrimaryButton, Sheet, SW, TextButton, inputCls, toast } from '../ui.jsx';
+import { AmountHeader, AmountKeypad, CurrencySwitch, applyKey, trimToCurrency } from './AmountPad.jsx';
 import { useStore } from '../store.jsx';
-import { BUDGET_CATS, defaultCurrencyFor, rateFor } from '../lib/logic.js';
+import { budgetCats, defaultCurrencyFor, localsOf, rateFor } from '../lib/logic.js';
 import { BUDGET_META } from '../meta.jsx';
-import { decimals, fmtNumber, money, round, symbol } from '../lib/currency.js';
+import { round } from '../lib/currency.js';
 import { todayISO } from '../lib/dates.js';
 import { shrinkImage } from '../lib/files.js';
 import { uid } from '../lib/db.js';
 import { FileViewer } from './Docs.jsx';
 
-function formatTyped(str, code) {
-  if (!str) return '0';
-  const [i, d] = str.split('.');
-  const int = fmtNumber(Number(i || 0), code, 0);
-  return d !== undefined ? `${int}.${d}` : int;
-}
-
 export default function AddExpense({ trip, open, onClose, expense }) {
   const { settings, updateTrip, saveFile, deleteFile } = useStore();
   const home = settings.homeCurrency;
-  const currencies = [...trip.localCurrencies, home];
+  const locals = localsOf(trip);
+  const currencies = [...locals, home];
   const [amt, setAmt] = useState('');
   const [cur, setCur] = useState(home);
   const [curTouched, setCurTouched] = useState(false);
@@ -55,37 +50,19 @@ export default function AddExpense({ trip, open, onClose, expense }) {
     if (open && !curTouched && !expense) setCur(defaultCurrencyFor(trip, date, settings));
   }, [date]); // eslint-disable-line
 
-  const dp = decimals(cur);
   const amount = Number(amt || 0);
   const sameAsOriginal = expense && expense.currency === cur;
   const rate = sameAsOriginal ? expense.rate : rateFor(trip, cur, settings);
-  const other = cur === home ? trip.localCurrencies[0] : home;
+  const other = cur === home ? locals[0] : home;
   const otherRate = other ? rateFor(trip, other, settings) : null;
   const homeAmount = rate ? amount / rate : null;
-  const converted = cur === home ? (otherRate ? amount * otherRate : null) : homeAmount;
 
-  const onKey = (k) => {
-    setAmt((a) => {
-      if (k === 'del') return a.slice(0, -1);
-      if (k === '.') return dp === 0 || a.includes('.') ? a : (a || '0') + '.';
-      const frac = a.split('.')[1];
-      if (frac !== undefined && frac.length + k.length > dp) return a;
-      if (k === '000' && (!a || a === '0')) return a;
-      const next = a === '0' ? k : a + k;
-      if (next.replace('.', '').length > 12) return a;
-      return next;
-    });
-  };
+  const onKey = (k) => setAmt((a) => applyKey(a, k, cur));
 
   const switchCur = (c) => {
     setCur(c);
     setCurTouched(true);
-    const d = decimals(c);
-    setAmt((a) => {
-      if (!a.includes('.')) return a;
-      const [i, f] = a.split('.');
-      return d === 0 ? i : `${i}.${f.slice(0, d)}`;
-    });
+    setAmt((a) => trimToCurrency(a, c));
   };
 
   const onReceipt = async (e) => {
@@ -126,30 +103,13 @@ export default function AddExpense({ trip, open, onClose, expense }) {
     onClose();
   };
 
-  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', dp === 0 ? '000' : '.', '0', 'del'];
-
   return (
-    <Sheet open={open} onClose={cancel} title={expense ? 'Edit Expense' : 'Add Expense'} right={<TextButton bold disabled={!amount || !rate} onClick={save}>Save</TextButton>}>
-      <div className="text-center pt-3">
-        <div className={cx('font-semibold tabular-nums tracking-tight leading-none break-all', amt.length > 9 ? 'text-[40px]' : 'text-[52px]', !amount && 'text-tertiary')}>
-          <span className="text-[0.6em] align-[0.25em] mr-1.5 text-tertiary font-medium">{symbol(cur)}</span>{formatTyped(amt, cur)}
-        </div>
-        <div className="h-9 mt-3 flex justify-center">
-          {amount > 0 && converted != null && other && (
-            <span className="anim-fade inline-flex items-center gap-1.5 rounded-full bg-ok/[0.14] text-ok px-3.5 text-[15px] font-semibold">
-              {money(amount, cur)} <ArrowRight size={15} strokeWidth={2} /> ≈ {money(converted, cur === home ? other : home)}
-            </span>
-          )}
-          {amount > 0 && !rate && <span className="inline-flex items-center rounded-full bg-warn/15 text-warn px-3.5 text-[14px] font-semibold">Set an exchange rate for {cur} in Budget first</span>}
-        </div>
-      </div>
-
-      {currencies.length > 1 && (
-        <Segmented className="mt-2" value={cur} onChange={switchCur} options={currencies.map((c) => ({ value: c, label: `${symbol(c)} ${c}` }))} />
-      )}
+    <Sheet open={open} onClose={cancel} title={expense ? 'Edit expense' : 'Add expense'} right={<TextButton bold disabled={!amount || !rate} onClick={save}>Save</TextButton>}>
+      <AmountHeader amt={amt} cur={cur} home={home} rate={rate} other={other} otherRate={otherRate} />
+      <CurrencySwitch currencies={currencies} value={cur} onChange={switchCur} />
 
       <div className="flex gap-2 overflow-x-auto no-scrollbar mt-4 -mx-4 px-4">
-        {BUDGET_CATS.map((c) => <Chip key={c} active={cat === c} onClick={() => setCat(c)} icon={BUDGET_META[c].icon}>{c}</Chip>)}
+        {budgetCats(trip).map((c) => <Chip key={c} active={cat === c} onClick={() => setCat(c)} icon={BUDGET_META[c].icon}>{c}</Chip>)}
       </div>
 
       <Group className="mt-4">
@@ -169,7 +129,7 @@ export default function AddExpense({ trip, open, onClose, expense }) {
         </div>
       </Group>
 
-      <Keypad className="mt-4" keys={keys} onKey={onKey} />
+      <AmountKeypad cur={cur} onKey={onKey} />
       <PrimaryButton className="mt-3" disabled={!amount || !rate} onClick={save}>{expense ? 'Save Changes' : 'Add Expense'}</PrimaryButton>
       {expense && (
         <button onClick={del} className="press mt-2 w-full min-h-[48px] text-danger text-[17px] flex items-center justify-center gap-2"><Trash2 size={18} strokeWidth={SW} /> Delete Expense</button>

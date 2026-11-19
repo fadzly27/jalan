@@ -4,7 +4,7 @@ import { Badge, Card, Field, Group, Header, IconButton, PrimaryButton, Segmented
 import { useStore } from '../store.jsx';
 import { BackButton } from './Trip.jsx';
 import PinPad from './PinPad.jsx';
-import { DOC_LABEL, DOC_STATUSES, DOC_TYPES, STATUS_LABEL, docWarnings } from '../lib/logic.js';
+import { DOC_LABEL, DOC_STATUSES, STATUS_LABEL, docTypesFor, docWarnings } from '../lib/logic.js';
 import { DOC_META, STATUS_TONE } from '../meta.jsx';
 import { fmtDayYear } from '../lib/dates.js';
 import { shrinkImage } from '../lib/files.js';
@@ -134,7 +134,7 @@ export default function Docs({ trip }) {
         ) : (
           <Card className="mt-4 p-6 flex flex-col items-center text-center" onClick={() => setSheet({ new: true })}>
             <FilePlus2 size={36} strokeWidth={1.25} className="text-tertiary mb-2" />
-            <p className="text-[15px] text-tertiary">Tap + to save your passport, tickets and bookings for offline use.</p>
+            <p className="text-[15px] text-tertiary">{trip.domestic ? 'Tap + to save bookings, tickets and IC copies for offline use.' : 'Tap + to save your passport, tickets and bookings for offline use.'}</p>
           </Card>
         )}
 
@@ -197,7 +197,7 @@ function DocSheet({ trip, state, onClose }) {
 
   useEffect(() => {
     if (state) {
-      const base = editing ? { ...editing } : { type: state.type || 'passport', title: '', status: 'check', number: '', expiry: '', fileId: null, notes: '' };
+      const base = editing ? { ...editing } : { type: state.type || (trip.domestic ? 'hotel' : 'passport'), title: '', status: 'check', number: '', expiry: '', fileId: null, notes: '' };
       setF(base);
       original.current = base.fileId;
     }
@@ -246,12 +246,12 @@ function DocSheet({ trip, state, onClose }) {
     set({ fileId: null, fileName: null });
   };
 
-  const showExpiry = ['passport', 'visa', 'insurance', 'other'].includes(f.type);
+  const showExpiry = ['passport', 'visa', 'insurance', 'id', 'other'].includes(f.type);
 
   return (
     <Sheet open={!!state} onClose={close} title={editing ? 'Document' : 'New Document'} right={<TextButton bold onClick={save}>{editing ? 'Save' : 'Add'}</TextButton>}>
       <div className="grid grid-cols-3 gap-2 mt-3">
-        {DOC_TYPES.map((t) => {
+        {docTypesFor(trip).map((t) => {
           const M = DOC_META[t];
           const active = f.type === t;
           return (
