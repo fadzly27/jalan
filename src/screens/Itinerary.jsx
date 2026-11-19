@@ -86,7 +86,7 @@ export default function Itinerary({ trip, go }) {
         <div className="bg-card rounded-card flex items-center gap-3 pl-3.5 pr-2 min-h-[60px] py-2">
           <div className="flex-1 min-w-0">
             <AvatarStack people={trip.travellers} size={30} />
-            <div className="text-[14px] leading-snug mt-1 truncate">{travellersLine(trip)}</div>
+            <div className="text-[14px] leading-snug mt-1 line-clamp-2">{travellersLine(trip)}</div>
           </div>
           <button onClick={() => setPeople(true)} className="press shrink-0 min-h-[44px] px-3 rounded-full text-accent text-[15px] font-semibold flex items-center gap-1.5">
             <UserPlus size={18} strokeWidth={SW} /> Add people
