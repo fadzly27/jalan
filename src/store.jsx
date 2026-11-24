@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { db, uid } from './lib/db.js';
 import { makeSampleTrip } from './lib/sample.js';
+import { makeSamplePenang } from './lib/samplePenang.js';
 import { normalizeTrip } from './lib/model.js';
 import { dataURLToBlob, readAsDataURL, downloadBlob } from './lib/files.js';
 
@@ -38,10 +39,19 @@ export function StoreProvider({ children }) {
       let t = await db.allTrips();
       const seeded = await db.get('seeded');
       if (!seeded && t.length === 0) {
-        const sample = makeSampleTrip(s.homeCurrency);
-        await db.putTrip(sample);
+        const samples = [makeSampleTrip(s.homeCurrency), makeSamplePenang(s.homeCurrency)];
+        for (const x of samples) await db.putTrip(x);
         await db.set('seeded', true);
-        t = [sample];
+        await db.set('seededPenang', true);
+        t = samples;
+      } else if (!(await db.get('seededPenang'))) {
+        // Existing users get the new domestic example once, unless they cleared the samples.
+        if (!s.sampleCleared && !t.some((x) => x.sampleId === 'penang')) {
+          const penang = makeSamplePenang(s.homeCurrency);
+          await db.putTrip(penang);
+          t = [...t, penang];
+        }
+        await db.set('seededPenang', true);
       }
       setTrips(t.map((x) => normalizeTrip(x, s)));
       setSettingsState(s);
@@ -148,8 +158,9 @@ export function StoreProvider({ children }) {
   }, [deleteTrip, setSettings]);
 
   const loadSample = useCallback(async () => {
-    const t = makeSampleTrip(settingsRef.current.homeCurrency);
-    await addTrip(t);
+    const have = new Set(tripsRef.current.filter((x) => x.sample).map((x) => x.sampleId || 'seoul'));
+    if (!have.has('seoul')) await addTrip(makeSampleTrip(settingsRef.current.homeCurrency));
+    if (!have.has('penang')) await addTrip(makeSamplePenang(settingsRef.current.homeCurrency));
     setSettings((s) => ({ ...s, sampleCleared: false }));
   }, [addTrip, setSettings]);
 

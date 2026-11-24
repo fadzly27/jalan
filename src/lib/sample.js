@@ -92,6 +92,7 @@ export function makeSampleTrip(home = 'MYR') {
   return {
     id: uid(),
     sample: true,
+    sampleId: 'seoul',
     name: 'Seoul – Busan',
     destinations: [{ country: 'KR', city: 'Seoul' }, { country: 'KR', city: 'Busan' }],
     start, end,

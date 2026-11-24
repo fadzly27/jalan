@@ -107,9 +107,9 @@ export default function Settings() {
 
         <Group title="Sample data">
           {hasSample ? (
-            <Row icon={Trash2} iconColor="rgb(var(--danger))" title="Clear sample data" tone="danger" chevron={false} onClick={async () => { if (window.confirm('Remove the sample Seoul – Busan trip?')) { await clearSample(); toast('Sample data cleared'); } }} last />
+            <Row icon={Trash2} iconColor="rgb(var(--danger))" title="Clear sample data" tone="danger" chevron={false} onClick={async () => { if (window.confirm('Remove the sample trips (Seoul – Busan and Penang Getaway)?')) { await clearSample(); toast('Sample data cleared'); } }} last />
           ) : (
-            <Row icon={Sparkles} iconColor="#AF52DE" title="Add sample trip" chevron={false} onClick={async () => { await loadSample(); toast('Sample trip added'); }} last />
+            <Row icon={Sparkles} iconColor="#AF52DE" title="Add sample trips" chevron={false} onClick={async () => { await loadSample(); toast('Sample trips added'); }} last />
           )}
         </Group>
 
